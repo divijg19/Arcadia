@@ -21,3 +21,15 @@ pub struct Renderable {
 pub struct Lifetime {
     pub remaining_ms: f64,
 }
+
+pub struct Collider {
+    pub w: f32,
+    pub h: f32,
+}
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum Tag {
+    Player,
+    Obstacle,
+    Bullet,
+}

@@ -37,6 +37,10 @@ pub fn movement_system(world: &mut World) {
     for (pos, vel) in query.iter() {
         pos.x += vel.vx;
         pos.y += vel.vy;
+
+        // World bounds clamp: keep entities inside 0..2000 range
+        pos.x = pos.x.clamp(0.0, 2000.0);
+        pos.y = pos.y.clamp(0.0, 2000.0);
     }
 }
 
@@ -56,6 +60,55 @@ pub fn lifetime_system(world: &mut World, dt_ms: f64) {
 
     // Despawn dead entities after the iteration
     for e in dead {
+        let _ = world.despawn(e);
+    }
+}
+
+pub fn collision_system(world: &mut World) {
+    // Collect collidable entities into a temporary list to avoid borrowing issues
+    let mut collidables: Vec<(hecs::Entity, f32, f32, f32, f32, components::Tag)> = Vec::new();
+
+    for (entity, pos, col, tag) in world
+        .query::<(
+            hecs::Entity,
+            &components::Position,
+            &components::Collider,
+            &components::Tag,
+        )>()
+        .iter()
+    {
+        collidables.push((entity, pos.x, pos.y, col.w, col.h, *tag));
+    }
+
+    let mut to_despawn: Vec<hecs::Entity> = Vec::new();
+
+    for i in 0..collidables.len() {
+        for j in (i + 1)..collidables.len() {
+            let (e1, x1, y1, w1, h1, t1) = collidables[i];
+            let (e2, x2, y2, w2, h2, t2) = collidables[j];
+
+            // Only interested in Bullet vs Obstacle collisions
+            let is_bullet_obstacle = (t1 == components::Tag::Bullet
+                && t2 == components::Tag::Obstacle)
+                || (t2 == components::Tag::Bullet && t1 == components::Tag::Obstacle);
+
+            if !is_bullet_obstacle {
+                continue;
+            }
+
+            let dx = (x1 - x2).abs();
+            let dy = (y1 - y2).abs();
+            let overlap_x = dx < ((w1 * 0.5) + (w2 * 0.5));
+            let overlap_y = dy < ((h1 * 0.5) + (h2 * 0.5));
+
+            if overlap_x && overlap_y {
+                to_despawn.push(e1);
+                to_despawn.push(e2);
+            }
+        }
+    }
+
+    for e in to_despawn {
         let _ = world.despawn(e);
     }
 }

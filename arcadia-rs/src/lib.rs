@@ -13,6 +13,8 @@ pub struct ArcadiaCore {
     world: World,
     entities: Vec<hecs::Entity>,
     player_input: u8,
+    camera_x: f32,
+    camera_y: f32,
 }
 
 #[wasm_bindgen]
@@ -27,6 +29,8 @@ impl ArcadiaCore {
             world: World::new(),
             entities: Vec::new(),
             player_input: 0,
+            camera_x: 0.0,
+            camera_y: 0.0,
         }
     }
 
@@ -42,6 +46,8 @@ impl ArcadiaCore {
                     rotation: 0.0,
                 },
                 components::InputReceiver,
+                components::Collider { w: 32.0, h: 32.0 },
+                components::Tag::Player,
             ))
         } else {
             self.world.spawn((
@@ -51,6 +57,8 @@ impl ArcadiaCore {
                     sprite_id: 0.0,
                     rotation: 0.0,
                 },
+                components::Collider { w: 32.0, h: 32.0 },
+                components::Tag::Obstacle,
             ))
         };
 
@@ -66,6 +74,8 @@ impl ArcadiaCore {
                 sprite_id: 1.0,
                 rotation: 0.0,
             },
+            components::Collider { w: 8.0, h: 8.0 },
+            components::Tag::Bullet,
             components::Lifetime {
                 remaining_ms: 2000.0,
             },
@@ -88,6 +98,22 @@ impl ArcadiaCore {
             // Run ECS systems
             systems::apply_input_system(&mut self.world, self.player_input);
             systems::movement_system(&mut self.world);
+
+            // Update camera to follow the player (center an 800x600 view)
+            for (pos, tag) in self
+                .world
+                .query::<(&components::Position, &components::Tag)>()
+                .iter()
+            {
+                if *tag == components::Tag::Player {
+                    self.camera_x = pos.x - 400.0;
+                    self.camera_y = pos.y - 300.0;
+                    break;
+                }
+            }
+
+            // Run collision detection (bullets vs obstacles)
+            systems::collision_system(&mut self.world);
 
             // Run lifetime system to despawn expired entities
             systems::lifetime_system(&mut self.world, self.tick_rate);
@@ -125,5 +151,15 @@ impl ArcadiaCore {
 
     pub fn get_render_buffer_len(&self) -> usize {
         self.render_buffer.len()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_camera_x(&self) -> f32 {
+        self.camera_x
+    }
+
+    #[wasm_bindgen]
+    pub fn get_camera_y(&self) -> f32 {
+        self.camera_y
     }
 }
