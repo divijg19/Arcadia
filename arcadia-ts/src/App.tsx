@@ -28,10 +28,10 @@ function App() {
       return
     }
 
-    // Spawn player (entity 0) and 99 static entities to test dynamic resizing
-    core.spawn_entity(400, 300)
-    for (let i = 0; i < 99; i++) {
-      core.spawn_entity(Math.random() * 800, Math.random() * 600)
+    // Spawn player (entity 0) in the center of the large world and 300 obstacles
+    core.spawn_entity(1000, 1000)
+    for (let i = 0; i < 300; i++) {
+      core.spawn_entity(Math.random() * 2000, Math.random() * 2000)
     }
 
     // create zero-copy view lazily inside the loop to handle WASM memory growth / reallocations
@@ -45,7 +45,8 @@ function App() {
       if (frameCount % 10 === 0) {
         const vx = (Math.random() - 0.5) * 10.0
         const vy = (Math.random() - 0.5) * 10.0
-        core.spawn_bullet(400, 300, vx, vy)
+        // Use camera to approximate player position (center of screen)
+        core.spawn_bullet(core.get_camera_x() + 400, core.get_camera_y() + 300, vx, vy)
       }
 
       // read input mask from TS InputManager and apply to Rust core
@@ -66,8 +67,10 @@ function App() {
         memoryView = new Float32Array(wasmExports.memory.buffer, ptr, len)
       }
 
-      // draw directly from the zero-copy Float32Array
-      renderer.draw(memoryView as Float32Array)
+      // draw directly from the zero-copy Float32Array. Read camera from WASM.
+      const camX = core.get_camera_x()
+      const camY = core.get_camera_y()
+      renderer.draw(memoryView as Float32Array, camX, camY)
       setTickCount(core.get_tick_count())
     })
 
