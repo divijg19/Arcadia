@@ -22,7 +22,7 @@ export class Renderer {
         await (this.app as any).init({ canvas, width: 800, height: 600, backgroundColor: 0x1a1a1a })
       } else {
         // Fallback to the stable constructor that accepts a view.
-        this.app = new Application({ view: canvas, width: 800, height: 600, background: 0x1a1a1a })
+        this.app = new Application({ view: canvas, width: 800, height: 600, backgroundColor: 0x1a1a1a })
       }
 
       // Create a red square and add it to the stage. Center the graphic at its origin.

@@ -2,6 +2,7 @@ import { createSignal, onMount } from 'solid-js'
 import './App.css'
 import { GameLoop } from './engine/GameLoop'
 import { Renderer } from './renderer/Renderer'
+import { InputManager } from './input/InputManager'
 
 function App() {
   const [tickCount, setTickCount] = createSignal(0)
@@ -12,6 +13,9 @@ function App() {
     const wasmExports: any = (mod && typeof mod.default === 'function') ? await mod.default() : null
 
     const core: any = new mod.ArcadiaCore()
+
+    // input manager (maps keyboard state to a bitmask)
+    const inputManager = new InputManager()
 
     // setup renderer
     const renderer = new Renderer()
@@ -31,6 +35,10 @@ function App() {
     let memoryView = new Float32Array(memoryBuffer, ptr, len)
 
     const loop = new GameLoop((dt_ms: number) => {
+      // read input mask from TS InputManager and apply to Rust core
+      const mask = inputManager.getMask()
+      core.apply_input(mask)
+
       core.update(dt_ms)
 
       // If WASM memory has grown, re-create the Float32Array view.
