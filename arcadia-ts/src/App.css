@@ -182,3 +182,22 @@
     border-right-color: var(--border);
   }
 }
+
+/* App-specific layout for Arcadia demo */
+.app-root {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#game-canvas {
+  display: block;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.tick-counter {
+  margin-top: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-size: 1.25rem;
+}
