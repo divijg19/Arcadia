@@ -37,7 +37,17 @@ function App() {
     // create zero-copy view lazily inside the loop to handle WASM memory growth / reallocations
     let memoryView: Float32Array | null = null
 
+    let frameCount = 0
+
     const loop = new GameLoop((dt_ms: number) => {
+      // Spawn a bullet every 10 frames to test lifetime/despawn
+      frameCount++
+      if (frameCount % 10 === 0) {
+        const vx = (Math.random() - 0.5) * 10.0
+        const vy = (Math.random() - 0.5) * 10.0
+        core.spawn_bullet(400, 300, vx, vy)
+      }
+
       // read input mask from TS InputManager and apply to Rust core
       const mask = inputManager.getMask()
       core.apply_input(mask)

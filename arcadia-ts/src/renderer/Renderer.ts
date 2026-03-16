@@ -35,7 +35,8 @@ export class Renderer {
   }
 
   private getOrCreateSprite(index: number): Graphics {
-    if (this.spritePool[index]) return this.spritePool[index]
+    const idx = Math.trunc(index)
+    if (this.spritePool[idx]) return this.spritePool[idx]
 
     // create a new pooled sprite
     const g = new Graphics()
@@ -47,28 +48,31 @@ export class Renderer {
       this.app.stage.addChild(g)
     }
 
-    this.spritePool.push(g)
+    // Place sprite at the exact ID index (sparse array allowed)
+    this.spritePool[idx] = g
     return g
   }
 
   draw(view: Float32Array) {
     if (!this.app) return
 
+    // Hide all existing pooled sprites first (support sparse pool)
+    for (const sprite of this.spritePool) {
+      if (sprite) sprite.visible = false
+    }
+
     // view layout: [EntityId, X, Y, Rotation, SpriteId]
     const entityCount = Math.floor(view.length / 5)
 
     for (let i = 0; i < entityCount; i++) {
       const offset = i * 5
-      const sprite = this.getOrCreateSprite(i)
+      const id = view[offset + 0]
+      const idIndex = Math.trunc(id)
+
+      const sprite = this.getOrCreateSprite(idIndex)
       sprite.x = view[offset + 1]
       sprite.y = view[offset + 2]
       sprite.visible = true
-    }
-
-    // hide unused pooled sprites
-    for (let i = entityCount; i < this.spritePool.length; i++) {
-      const s = this.spritePool[i]
-      if (s) s.visible = false
     }
   }
 }

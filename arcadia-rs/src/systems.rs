@@ -39,3 +39,23 @@ pub fn movement_system(world: &mut World) {
         pos.y += vel.vy;
     }
 }
+
+pub fn lifetime_system(world: &mut World, dt_ms: f64) {
+    let mut dead: Vec<hecs::Entity> = Vec::new();
+
+    // Iterate over entities that have a Lifetime component and decrement
+    for (entity, lifetime) in world
+        .query_mut::<(hecs::Entity, &mut components::Lifetime)>()
+        .into_iter()
+    {
+        lifetime.remaining_ms -= dt_ms;
+        if lifetime.remaining_ms <= 0.0 {
+            dead.push(entity);
+        }
+    }
+
+    // Despawn dead entities after the iteration
+    for e in dead {
+        let _ = world.despawn(e);
+    }
+}

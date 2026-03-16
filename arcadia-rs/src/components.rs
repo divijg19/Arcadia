@@ -17,3 +17,7 @@ pub struct Renderable {
     pub sprite_id: f32,
     pub rotation: f32,
 }
+
+pub struct Lifetime {
+    pub remaining_ms: f64,
+}
