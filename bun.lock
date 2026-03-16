@@ -5,10 +5,10 @@
     "": {
       "name": "arcadia",
       "devDependencies": {
-        "@types/bun": "^1.3.10",
+        "@types/bun": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "latest",
       },
     },
     "arcadia-ts": {

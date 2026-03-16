@@ -2,7 +2,7 @@ import { Application, Graphics } from 'pixi.js'
 
 export class Renderer {
   app: Application | null = null
-  square: Graphics | null = null
+  private spritePool: Graphics[] = []
 
   constructor() {
     // Application will be initialized in init. Keep constructor minimal to avoid side-effects.
@@ -25,16 +25,7 @@ export class Renderer {
         this.app = new Application({ view: canvas, width: 800, height: 600, backgroundColor: 0x1a1a1a })
       }
 
-      // Create a red square and add it to the stage. Center the graphic at its origin.
-      this.square = new Graphics()
-      this.square.beginFill(0xff0000)
-      this.square.drawRect(-16, -16, 32, 32)
-      this.square.endFill()
-
-      // ensure square is added
-      if (this.app && this.app.stage) {
-        this.app.stage.addChild(this.square)
-      }
+      // Start with an empty pool; sprites will be allocated lazily by getOrCreateSprite
     } catch (err) {
       // Log and rethrow so callers can surface the error in the browser console
       // eslint-disable-next-line no-console
@@ -43,13 +34,41 @@ export class Renderer {
     }
   }
 
+  private getOrCreateSprite(index: number): Graphics {
+    if (this.spritePool[index]) return this.spritePool[index]
+
+    // create a new pooled sprite
+    const g = new Graphics()
+    g.beginFill(0xff0000)
+    g.drawRect(-16, -16, 32, 32)
+    g.endFill()
+
+    if (this.app && this.app.stage) {
+      this.app.stage.addChild(g)
+    }
+
+    this.spritePool.push(g)
+    return g
+  }
+
   draw(view: Float32Array) {
-    if (!this.square) return
+    if (!this.app) return
+
     // view layout: [EntityId, X, Y, Rotation, SpriteId]
-    const x = view[1]
-    const y = view[2]
-    // Position the square directly — zero JS->WASM calls here
-    this.square.x = x
-    this.square.y = y
+    const entityCount = Math.floor(view.length / 5)
+
+    for (let i = 0; i < entityCount; i++) {
+      const offset = i * 5
+      const sprite = this.getOrCreateSprite(i)
+      sprite.x = view[offset + 1]
+      sprite.y = view[offset + 2]
+      sprite.visible = true
+    }
+
+    // hide unused pooled sprites
+    for (let i = entityCount; i < this.spritePool.length; i++) {
+      const s = this.spritePool[i]
+      if (s) s.visible = false
+    }
   }
 }

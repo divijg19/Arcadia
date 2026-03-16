@@ -28,11 +28,14 @@ function App() {
       return
     }
 
-    // create zero-copy view into WASM memory
-    let ptr = Number(core.get_render_buffer_ptr())
-    let len = Number(core.get_render_buffer_len())
-    let memoryBuffer = wasmExports.memory.buffer
-    let memoryView = new Float32Array(memoryBuffer, ptr, len)
+    // Spawn player (entity 0) and 99 static entities to test dynamic resizing
+    core.spawn_entity(400, 300)
+    for (let i = 0; i < 99; i++) {
+      core.spawn_entity(Math.random() * 800, Math.random() * 600)
+    }
+
+    // create zero-copy view lazily inside the loop to handle WASM memory growth / reallocations
+    let memoryView: Float32Array | null = null
 
     const loop = new GameLoop((dt_ms: number) => {
       // read input mask from TS InputManager and apply to Rust core
@@ -41,14 +44,20 @@ function App() {
 
       core.update(dt_ms)
 
-      // If WASM memory has grown, re-create the Float32Array view.
-      if (wasmExports && wasmExports.memory && wasmExports.memory.buffer !== memoryBuffer) {
-        memoryBuffer = wasmExports.memory.buffer
-        memoryView = new Float32Array(memoryBuffer, ptr, len)
+      // Check if view needs to be recreated (due to WASM memory growth or vector reallocation)
+      const ptr = Number(core.get_render_buffer_ptr())
+      const len = Number(core.get_render_buffer_len())
+      if (
+        !memoryView ||
+        memoryView.buffer !== wasmExports.memory.buffer ||
+        memoryView.byteOffset !== ptr ||
+        memoryView.length !== len
+      ) {
+        memoryView = new Float32Array(wasmExports.memory.buffer, ptr, len)
       }
 
       // draw directly from the zero-copy Float32Array
-      renderer.draw(memoryView)
+      renderer.draw(memoryView as Float32Array)
       setTickCount(core.get_tick_count())
     })
 
