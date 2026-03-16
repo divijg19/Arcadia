@@ -1,0 +1,19 @@
+{
+  "name": "arcadia",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "arcadia-rs/pkg",
+    "arcadia-ts"
+  ],
+  "scripts": {
+    "dev": "wasm-pack build arcadia-rs --target web && cd arcadia-ts && bun run dev"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.10"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
