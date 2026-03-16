@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2"
+hecs = "0.11.0"
 
 [profile.release]
 opt-level = "s"
