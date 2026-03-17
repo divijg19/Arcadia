@@ -8,7 +8,7 @@ impl Rng {
         Self { state: seed.max(1) }
     }
 
-    pub fn next(&mut self) -> u64 {
+    pub fn next_u64(&mut self) -> u64 {
         let mut x = self.state;
         x ^= x << 13;
         x ^= x >> 7;
@@ -19,7 +19,7 @@ impl Rng {
 
     pub fn next_f32(&mut self) -> f32 {
         // Take the upper 24 bits to construct a float between 0.0 and 1.0
-        (self.next() & 0xFFFFFF) as f32 / 16777216.0
+        (self.next_u64() & 0xFFFFFF) as f32 / 16777216.0
     }
 
     pub fn next_range(&mut self, min: f32, max: f32) -> f32 {
