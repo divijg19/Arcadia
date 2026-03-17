@@ -1,6 +1,6 @@
 [package]
 name = "arcadia-rs"
-version = "0.4.1"
+version = "0.4.2"
 description = "Arcadia game engine core written in Rust, compiled to WebAssembly."
 repository = "https://github.com/divijg19/Arcadia/arcadia-rs"
 edition = "2024"
