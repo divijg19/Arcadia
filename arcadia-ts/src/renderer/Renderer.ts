@@ -1,33 +1,70 @@
 import { Application, Container, Graphics } from "pixi.js";
 
+type PixiAsyncApp = Application & {
+	init?: (opts: {
+		canvas: HTMLCanvasElement;
+		width: number;
+		height: number;
+		backgroundColor: number;
+	}) => Promise<void>;
+};
+
+type PixiTaggedGraphics = Graphics & { _arcadiaSpriteId?: number };
+
 export class Renderer {
 	app: Application | null = null;
 	private worldContainer: Container = new Container();
 	private spritePool: Array<Graphics | undefined> = [];
 
-	constructor() {
-		// Application will be initialized in init. Keep constructor minimal to avoid side-effects.
+	/**
+	 * Draw a filled rectangle using the modern PIXI API when available
+	 * (fillStyle + fillRect), otherwise fall back to beginFill/drawRect/endFill.
+	 */
+	private drawFilledRect(
+		g: PixiTaggedGraphics,
+		x: number,
+		y: number,
+		w: number,
+		h: number,
+		color: number,
+	) {
+		const maybeNewApi = g as unknown as {
+			fillStyle?: (opts: { color: number; alpha?: number }) => void;
+			fillRect?: (x: number, y: number, w: number, h: number) => void;
+		};
+
+		if (
+			typeof maybeNewApi.fillStyle === "function" &&
+			typeof maybeNewApi.fillRect === "function"
+		) {
+			maybeNewApi.fillStyle({ color });
+			maybeNewApi.fillRect(x, y, w, h);
+			return;
+		}
+
+		// Fallback for older PIXI versions
+		g.beginFill(color);
+		g.drawRect(x, y, w, h);
+		g.endFill();
 	}
 
 	async init(canvas: HTMLCanvasElement) {
 		try {
 			// Prefer a two-step init if available (some builds expose an async init), otherwise construct with view.
-			// Create a placeholder Application instance for environments that support async init.
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const maybeApp: any = new Application();
-
-			if (typeof maybeApp.init === "function") {
-				// Some PIXI distributions expose an async init API.
-				this.app = maybeApp;
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				await (this.app as any).init({
-					canvas,
+			// Create an Application instance and initialize it via the async `init()` API
+			// (constructor options are deprecated since Pixi v8).
+			const app = new Application() as PixiAsyncApp;
+			this.app = app;
+			if (typeof app.init === "function") {
+				await app.init({
+					view: canvas,
 					width: 800,
 					height: 600,
 					backgroundColor: 0x1a1a1a,
 				});
 			} else {
-				// Fallback to the stable constructor that accepts a view.
+				// As a very small compatibility fallback, set up the stage renderer manually
+				// (this path is unlikely on modern Pixi builds).
 				this.app = new Application({
 					view: canvas,
 					width: 800,
@@ -37,9 +74,7 @@ export class Renderer {
 			}
 
 			// Add the world container to the stage so camera transforms apply to everything in-world
-			if (this.app && this.app.stage) {
-				this.app.stage.addChild(this.worldContainer);
-			}
+			this.app?.stage?.addChild(this.worldContainer);
 
 			// Start with an empty pool; sprites will be allocated lazily by getOrCreateSprite
 		} catch (err) {
@@ -50,21 +85,22 @@ export class Renderer {
 		}
 	}
 
-	private getOrCreateSprite(index: number, spriteId: number): Graphics {
+	private getOrCreateSprite(
+		index: number,
+		spriteId: number,
+	): PixiTaggedGraphics {
 		const idx = Math.trunc(index);
 
 		// If a sprite already exists at this ID, check if it matches the requested spriteId
 		if (this.spritePool[idx]) {
-			const existing = this.spritePool[idx] as Graphics;
-			if ((existing as any)._arcadiaSpriteId === spriteId) {
+			const existing = this.spritePool[idx] as PixiTaggedGraphics;
+			if (existing._arcadiaSpriteId === spriteId) {
 				return existing;
 			} else {
 				// Different visual requested; destroy and remove the old one
 				try {
-					// `baseTexture` is not a valid option in PIXI destroy options types;
-					// remove it to satisfy TypeScript typings.
 					existing.destroy({ children: true, texture: true });
-				} catch (e) {
+				} catch {
 					// ignore
 				}
 				delete this.spritePool[idx];
@@ -72,26 +108,22 @@ export class Renderer {
 		}
 
 		// create a new pooled sprite based on spriteId
-		const g = new Graphics();
+		const g = new Graphics() as PixiTaggedGraphics;
 
 		if (spriteId === 1.0) {
 			// Bullet: small yellow square
-			g.beginFill(0xffff00);
-			g.drawRect(-4, -4, 8, 8);
-			g.endFill();
+			this.drawFilledRect(g, -4, -4, 8, 8, 0xffff00);
 		} else {
 			// Player / Obstacle: larger red square
-			g.beginFill(0xff0000);
-			g.drawRect(-16, -16, 32, 32);
-			g.endFill();
+			this.drawFilledRect(g, -16, -16, 32, 32, 0xff0000);
 		}
 
-		if (this.app && this.app.stage) {
-			// Add to the world container so camera transforms apply
-			this.worldContainer.addChild(g);
-		}
+		// Add the sprite to the world container so camera transforms apply
+		// (worldContainer is added once in init)
+		this.worldContainer.addChild(g);
+
 		// tag the sprite with its arcadia sprite id for future type checks
-		(g as any)._arcadiaSpriteId = spriteId;
+		(g as PixiTaggedGraphics)._arcadiaSpriteId = spriteId;
 
 		// Place sprite at the exact ID index (sparse array allowed)
 		this.spritePool[idx] = g;
