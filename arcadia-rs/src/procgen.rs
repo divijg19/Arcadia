@@ -87,7 +87,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
     }
 
     // Spawn internal obstacles procedurally
-    for _ in 0..200 {
+    for _ in 0..2000 {
         let ox = rng.next_range(100.0, width - 100.0);
         let oy = rng.next_range(100.0, height - 100.0);
         let ent = world.spawn((
