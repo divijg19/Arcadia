@@ -15,6 +15,9 @@ type ArcadiaCoreInstance = {
 	get_camera_y(): number;
 	apply_input(mask: number): void;
 	apply_mouse(x: number, y: number, is_down: boolean): void;
+	get_event_buffer_ptr(): number;
+	get_event_buffer_len(): number;
+	clear_events(): void;
 	update(dt_ms: number): void;
 	init_world(seed: number): void;
 };
@@ -92,6 +95,31 @@ function App() {
 			const camX = core.get_camera_x();
 			const camY = core.get_camera_y();
 			renderer.draw(memoryView as Float32Array, camX, camY);
+
+			// Process event buffer emitted from WASM (each event is 3 floats: [type, x, y])
+			const eventPtr = Number(core.get_event_buffer_ptr());
+			const eventLen = Number(core.get_event_buffer_len());
+			if (eventLen > 0) {
+				const eventView = new Float32Array(
+					wasmMemory.buffer,
+					eventPtr,
+					eventLen,
+				);
+				const eventCount = Math.floor(eventLen / 3);
+				for (let i = 0; i < eventCount; i++) {
+					const offset = i * 3;
+					const type = eventView[offset + 0];
+					const x = eventView[offset + 1];
+					const y = eventView[offset + 2];
+					if (type === 1.0) {
+						console.log(`BOOM! Obstacle destroyed at ${x}, ${y}`);
+					} else if (type === 2.0) {
+						console.log(`CLINK! Bullet hit wall at ${x}, ${y}`);
+					}
+				}
+				core.clear_events();
+			}
+
 			setTickCount(core.get_tick_count());
 		});
 
