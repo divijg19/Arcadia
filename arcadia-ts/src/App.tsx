@@ -14,8 +14,8 @@ type ArcadiaCoreInstance = {
 	get_camera_x(): number;
 	get_camera_y(): number;
 	apply_input(mask: number): void;
+	apply_mouse(x: number, y: number, is_down: boolean): void;
 	update(dt_ms: number): void;
-	spawn_bullet(x: number, y: number, vx: number, vy: number): void;
 	init_world(seed: number): void;
 };
 
@@ -62,26 +62,17 @@ function App() {
 		// create zero-copy view lazily inside the loop to handle WASM memory growth / reallocations
 		let memoryView: Float32Array | null = null;
 
-		let frameCount = 0;
-
 		const loop = new GameLoop((dt_ms: number) => {
-			// Spawn a bullet every 10 frames to test lifetime/despawn
-			frameCount++;
-			if (frameCount % 10 === 0) {
-				const vx = (Math.random() - 0.5) * 10.0;
-				const vy = (Math.random() - 0.5) * 10.0;
-				// Use camera to approximate player position (center of screen)
-				core.spawn_bullet(
-					core.get_camera_x() + 400,
-					core.get_camera_y() + 300,
-					vx,
-					vy,
-				);
-			}
-
 			// read input mask from TS InputManager and apply to Rust core
 			const mask = inputManager.getMask();
 			core.apply_input(mask);
+
+			// pass raw mouse coordinates & button state to WASM (canvas-relative)
+			core.apply_mouse(
+				inputManager.getMouseX(),
+				inputManager.getMouseY(),
+				inputManager.isMouseDown(),
+			);
 
 			core.update(dt_ms);
 

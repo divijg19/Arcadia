@@ -17,6 +17,10 @@ pub struct ArcadiaCore {
     player_input: u8,
     camera_x: f32,
     camera_y: f32,
+    mouse_x: f32,
+    mouse_y: f32,
+    is_mouse_down: bool,
+    fire_cooldown: f64,
 }
 
 #[wasm_bindgen]
@@ -33,12 +37,15 @@ impl ArcadiaCore {
             player_input: 0,
             camera_x: 0.0,
             camera_y: 0.0,
+            mouse_x: 0.0,
+            mouse_y: 0.0,
+            is_mouse_down: false,
+            fire_cooldown: 0.0,
         }
     }
 
     // `spawn_entity` removed in favor of deterministic procedural generation (init_world)
 
-    #[wasm_bindgen]
     pub fn spawn_bullet(&mut self, x: f32, y: f32, vx: f32, vy: f32) {
         let ent = self.world.spawn((
             components::Position { x, y },
@@ -55,6 +62,13 @@ impl ArcadiaCore {
         ));
 
         self.entities.push(ent);
+    }
+
+    #[wasm_bindgen]
+    pub fn apply_mouse(&mut self, x: f32, y: f32, is_down: bool) {
+        self.mouse_x = x;
+        self.mouse_y = y;
+        self.is_mouse_down = is_down;
     }
 
     #[wasm_bindgen]
@@ -77,8 +91,47 @@ impl ArcadiaCore {
             // Fixed-timestep tick
             self.current_tick = self.current_tick.wrapping_add(1);
 
+            // Decrease firing cooldown (ms)
+            if self.fire_cooldown > 0.0 {
+                self.fire_cooldown -= self.tick_rate;
+                if self.fire_cooldown < 0.0 {
+                    self.fire_cooldown = 0.0;
+                }
+            }
+
             // Run ECS systems
             systems::apply_input_system(&mut self.world, self.player_input);
+
+            // Shooting / aiming: if mouse is down and cooldown expired, spawn a bullet towards world mouse
+            if self.is_mouse_down && self.fire_cooldown <= 0.0 {
+                let mut player_pos: Option<(f32, f32)> = None;
+                for (pos, tag) in self
+                    .world
+                    .query::<(&components::Position, &components::Tag)>()
+                    .iter()
+                {
+                    if *tag == components::Tag::Player {
+                        player_pos = Some((pos.x, pos.y));
+                        break;
+                    }
+                }
+
+                if let Some((px, py)) = player_pos {
+                    let world_mx = self.mouse_x + self.camera_x;
+                    let world_my = self.mouse_y + self.camera_y;
+                    let dx = world_mx - px;
+                    let dy = world_my - py;
+                    let len = (dx * dx + dy * dy).sqrt();
+
+                    if len > 0.0 {
+                        let vx = (dx / len) * 15.0; // Bullet speed
+                        let vy = (dy / len) * 15.0;
+                        self.spawn_bullet(px, py, vx, vy);
+                        self.fire_cooldown = 150.0; // Shoot every 150ms
+                    }
+                }
+            }
+
             systems::movement_system(&mut self.world);
 
             // Update camera to follow the player (center an 800x600 view)
