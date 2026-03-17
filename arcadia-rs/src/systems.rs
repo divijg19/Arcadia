@@ -87,23 +87,33 @@ pub fn collision_system(world: &mut World) {
             let (e1, x1, y1, w1, h1, t1) = collidables[i];
             let (e2, x2, y2, w2, h2, t2) = collidables[j];
 
-            // Only interested in Bullet vs Obstacle collisions
-            let is_bullet_obstacle = (t1 == components::Tag::Bullet
-                && t2 == components::Tag::Obstacle)
-                || (t2 == components::Tag::Bullet && t1 == components::Tag::Obstacle);
-
-            if !is_bullet_obstacle {
-                continue;
-            }
-
+            // Check collision overlaps
             let dx = (x1 - x2).abs();
             let dy = (y1 - y2).abs();
             let overlap_x = dx < ((w1 * 0.5) + (w2 * 0.5));
             let overlap_y = dy < ((h1 * 0.5) + (h2 * 0.5));
 
+            // Collision rules:
+            // - Bullet vs Obstacle: despawn both
+            // - Bullet vs Wall: despawn only the bullet
+            let is_bullet_obstacle = (t1 == components::Tag::Bullet
+                && t2 == components::Tag::Obstacle)
+                || (t2 == components::Tag::Bullet && t1 == components::Tag::Obstacle);
+            let is_bullet_wall = (t1 == components::Tag::Bullet && t2 == components::Tag::Wall)
+                || (t2 == components::Tag::Bullet && t1 == components::Tag::Wall);
+
             if overlap_x && overlap_y {
-                to_despawn.push(e1);
-                to_despawn.push(e2);
+                if is_bullet_obstacle {
+                    to_despawn.push(e1);
+                    to_despawn.push(e2);
+                } else if is_bullet_wall {
+                    if t1 == components::Tag::Bullet {
+                        to_despawn.push(e1);
+                    }
+                    if t2 == components::Tag::Bullet {
+                        to_despawn.push(e2);
+                    }
+                }
             }
         }
     }

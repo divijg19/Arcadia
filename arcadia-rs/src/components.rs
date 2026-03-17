@@ -32,4 +32,5 @@ pub enum Tag {
     Player,
     Obstacle,
     Bullet,
+    Wall,
 }
