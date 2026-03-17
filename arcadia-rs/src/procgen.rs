@@ -37,7 +37,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
-            Tag::Obstacle,
+            Tag::Wall,
         ));
         entities.push(top);
 
@@ -49,7 +49,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
-            Tag::Obstacle,
+            Tag::Wall,
         ));
         entities.push(bottom);
 
@@ -67,7 +67,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
-            Tag::Obstacle,
+            Tag::Wall,
         ));
         entities.push(left);
 
@@ -79,7 +79,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
-            Tag::Obstacle,
+            Tag::Wall,
         ));
         entities.push(right);
 

@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Sprite, Texture } from "pixi.js";
 
 type PixiAsyncApp = Application & {
 	init?: (opts: {
@@ -9,44 +9,12 @@ type PixiAsyncApp = Application & {
 	}) => Promise<void>;
 };
 
-type PixiTaggedGraphics = Graphics & { _arcadiaSpriteId?: number };
+type PixiTaggedSprite = Sprite & { _arcadiaSpriteId?: number };
 
 export class Renderer {
 	app: Application | null = null;
 	private worldContainer: Container = new Container();
-	private spritePool: Array<Graphics | undefined> = [];
-
-	/**
-	 * Draw a filled rectangle using the modern PIXI API when available
-	 * (fillStyle + fillRect), otherwise fall back to beginFill/drawRect/endFill.
-	 */
-	private drawFilledRect(
-		g: PixiTaggedGraphics,
-		x: number,
-		y: number,
-		w: number,
-		h: number,
-		color: number,
-	) {
-		const maybeNewApi = g as unknown as {
-			fillStyle?: (opts: { color: number; alpha?: number }) => void;
-			fillRect?: (x: number, y: number, w: number, h: number) => void;
-		};
-
-		if (
-			typeof maybeNewApi.fillStyle === "function" &&
-			typeof maybeNewApi.fillRect === "function"
-		) {
-			maybeNewApi.fillStyle({ color });
-			maybeNewApi.fillRect(x, y, w, h);
-			return;
-		}
-
-		// Fallback for older PIXI versions
-		g.beginFill(color);
-		g.drawRect(x, y, w, h);
-		g.endFill();
-	}
+	private spritePool: Array<Sprite | undefined> = [];
 
 	async init(canvas: HTMLCanvasElement) {
 		try {
@@ -85,15 +53,12 @@ export class Renderer {
 		}
 	}
 
-	private getOrCreateSprite(
-		index: number,
-		spriteId: number,
-	): PixiTaggedGraphics {
+	private getOrCreateSprite(index: number, spriteId: number): PixiTaggedSprite {
 		const idx = Math.trunc(index);
 
 		// If a sprite already exists at this ID, check if it matches the requested spriteId
 		if (this.spritePool[idx]) {
-			const existing = this.spritePool[idx] as PixiTaggedGraphics;
+			const existing = this.spritePool[idx] as PixiTaggedSprite;
 			if (existing._arcadiaSpriteId === spriteId) {
 				return existing;
 			} else {
@@ -107,27 +72,31 @@ export class Renderer {
 			}
 		}
 
-		// create a new pooled sprite based on spriteId
-		const g = new Graphics() as PixiTaggedGraphics;
+		// create a new Sprite using a white 1x1 texture and tint/scale it
+		const s = new Sprite(Texture.WHITE) as PixiTaggedSprite;
+		s.anchor.set(0.5);
 
 		if (spriteId === 1.0) {
 			// Bullet: small yellow square
-			this.drawFilledRect(g, -4, -4, 8, 8, 0xffff00);
+			s.width = 8;
+			s.height = 8;
+			s.tint = 0xffff00;
 		} else {
-			// Player / Obstacle: larger red square
-			this.drawFilledRect(g, -16, -16, 32, 32, 0xff0000);
+			// Player / Obstacle / Wall: larger red square
+			s.width = 32;
+			s.height = 32;
+			s.tint = 0xff0000;
 		}
 
 		// Add the sprite to the world container so camera transforms apply
-		// (worldContainer is added once in init)
-		this.worldContainer.addChild(g);
+		this.worldContainer.addChild(s);
 
 		// tag the sprite with its arcadia sprite id for future type checks
-		(g as PixiTaggedGraphics)._arcadiaSpriteId = spriteId;
+		s._arcadiaSpriteId = spriteId;
 
 		// Place sprite at the exact ID index (sparse array allowed)
-		this.spritePool[idx] = g;
-		return g;
+		this.spritePool[idx] = s;
+		return s;
 	}
 
 	draw(view: Float32Array, camX: number, camY: number) {
