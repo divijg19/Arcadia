@@ -13,7 +13,7 @@
     },
     "arcadia-ts": {
       "name": "arcadia-ts",
-      "version": "0.3.0",
+      "version": "0.4.3",
       "dependencies": {
         "pixi.js": "latest",
         "solid-js": "latest",

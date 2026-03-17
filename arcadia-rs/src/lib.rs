@@ -23,6 +23,12 @@ pub struct ArcadiaCore {
     fire_cooldown: f64,
 }
 
+impl Default for ArcadiaCore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 impl ArcadiaCore {
     #[wasm_bindgen(constructor)]
@@ -143,6 +149,9 @@ impl ArcadiaCore {
                 if *tag == components::Tag::Player {
                     self.camera_x = pos.x - 400.0;
                     self.camera_y = pos.y - 300.0;
+                    // Clamp camera so the viewport never shows outside the 2000x2000 world
+                    self.camera_x = self.camera_x.clamp(0.0, 2000.0 - 800.0);
+                    self.camera_y = self.camera_y.clamp(0.0, 2000.0 - 600.0);
                     break;
                 }
             }
