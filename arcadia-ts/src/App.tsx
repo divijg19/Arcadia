@@ -4,16 +4,38 @@ import { GameLoop } from "./engine/GameLoop";
 import { InputManager } from "./input/InputManager";
 import { Renderer } from "./renderer/Renderer";
 
+// Explicit wasm/Arcadia types to avoid `any` and satisfy the linter
+type WasmInitResult = { memory?: WebAssembly.Memory };
+
+type ArcadiaCoreInstance = {
+	get_render_buffer_ptr(): number;
+	get_render_buffer_len(): number;
+	get_tick_count(): number;
+	get_camera_x(): number;
+	get_camera_y(): number;
+	apply_input(mask: number): void;
+	update(dt_ms: number): void;
+	spawn_bullet(x: number, y: number, vx: number, vy: number): void;
+	init_world(seed: number): void;
+};
+
+type WasmModule = {
+	default?: () => Promise<WasmInitResult>;
+	ArcadiaCore: { new (): ArcadiaCoreInstance };
+};
+
 function App() {
 	const [tickCount, setTickCount] = createSignal(0);
 
 	onMount(async () => {
 		// import the wasm module and initialize it (captures memory in the returned exports)
-		const mod: any = await import("../../arcadia-rs/pkg/arcadia_rs.js");
-		const wasmExports: any =
+		const mod = (await import(
+			"../../arcadia-rs/pkg/arcadia_rs.js"
+		)) as unknown as WasmModule;
+		const wasmExports: WasmInitResult | null =
 			mod && typeof mod.default === "function" ? await mod.default() : null;
 
-		const core: any = new mod.ArcadiaCore();
+		const core = new mod.ArcadiaCore();
 
 		// input manager (maps keyboard state to a bitmask)
 		const inputManager = new InputManager();
@@ -30,6 +52,9 @@ function App() {
 			);
 			return;
 		}
+
+		// Cache the WebAssembly memory reference to satisfy TypeScript's nullability checks
+		const wasmMemory = wasmExports.memory as WebAssembly.Memory;
 
 		// Initialize the world procedurally in WASM with a deterministic seed
 		core.init_world(1337);
@@ -65,11 +90,11 @@ function App() {
 			const len = Number(core.get_render_buffer_len());
 			if (
 				!memoryView ||
-				memoryView.buffer !== wasmExports.memory.buffer ||
+				memoryView.buffer !== wasmMemory.buffer ||
 				memoryView.byteOffset !== ptr ||
 				memoryView.length !== len
 			) {
-				memoryView = new Float32Array(wasmExports.memory.buffer, ptr, len);
+				memoryView = new Float32Array(wasmMemory.buffer, ptr, len);
 			}
 
 			// draw directly from the zero-copy Float32Array. Read camera from WASM.
