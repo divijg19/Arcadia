@@ -2,6 +2,8 @@ use hecs::World;
 use wasm_bindgen::prelude::*;
 
 mod components;
+pub mod procgen;
+pub mod rng;
 mod systems;
 
 #[wasm_bindgen]
@@ -34,36 +36,7 @@ impl ArcadiaCore {
         }
     }
 
-    #[wasm_bindgen]
-    pub fn spawn_entity(&mut self, x: f32, y: f32) {
-        // If this is the first entity, give it InputReceiver so it becomes the player
-        let ent = if self.world.len() == 0 {
-            self.world.spawn((
-                components::Position { x, y },
-                components::Velocity { vx: 0.0, vy: 0.0 },
-                components::Renderable {
-                    sprite_id: 0.0,
-                    rotation: 0.0,
-                },
-                components::InputReceiver,
-                components::Collider { w: 32.0, h: 32.0 },
-                components::Tag::Player,
-            ))
-        } else {
-            self.world.spawn((
-                components::Position { x, y },
-                components::Velocity { vx: 0.0, vy: 0.0 },
-                components::Renderable {
-                    sprite_id: 0.0,
-                    rotation: 0.0,
-                },
-                components::Collider { w: 32.0, h: 32.0 },
-                components::Tag::Obstacle,
-            ))
-        };
-
-        self.entities.push(ent);
-    }
+    // `spawn_entity` removed in favor of deterministic procedural generation (init_world)
 
     #[wasm_bindgen]
     pub fn spawn_bullet(&mut self, x: f32, y: f32, vx: f32, vy: f32) {
@@ -82,6 +55,15 @@ impl ArcadiaCore {
         ));
 
         self.entities.push(ent);
+    }
+
+    #[wasm_bindgen]
+    pub fn init_world(&mut self, seed: u32) {
+        // Procedurally generate a deterministic world and capture the spawned entity list
+        self.entities = procgen::generate_arena(&mut self.world, seed as u64, 2000.0, 2000.0);
+        // Reset camera to origin; the first update() will center on the player
+        self.camera_x = 0.0;
+        self.camera_y = 0.0;
     }
 
     #[wasm_bindgen]
