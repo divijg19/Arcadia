@@ -21,6 +21,7 @@ pub struct ArcadiaCore {
     mouse_y: f32,
     is_mouse_down: bool,
     fire_cooldown: f64,
+    event_buffer: Vec<f32>,
 }
 
 impl Default for ArcadiaCore {
@@ -47,6 +48,7 @@ impl ArcadiaCore {
             mouse_y: 0.0,
             is_mouse_down: false,
             fire_cooldown: 0.0,
+            event_buffer: Vec::new(),
         }
     }
 
@@ -156,8 +158,8 @@ impl ArcadiaCore {
                 }
             }
 
-            // Run collision detection (bullets vs obstacles)
-            systems::collision_system(&mut self.world);
+            // Run collision detection (bullets vs obstacles) and emit events
+            systems::collision_system(&mut self.world, &mut self.event_buffer);
 
             // Run lifetime system to despawn expired entities
             systems::lifetime_system(&mut self.world, self.tick_rate);
@@ -195,6 +197,21 @@ impl ArcadiaCore {
 
     pub fn get_render_buffer_len(&self) -> usize {
         self.render_buffer.len()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_event_buffer_ptr(&self) -> *const f32 {
+        self.event_buffer.as_ptr()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_event_buffer_len(&self) -> usize {
+        self.event_buffer.len()
+    }
+
+    #[wasm_bindgen]
+    pub fn clear_events(&mut self) {
+        self.event_buffer.clear();
     }
 
     #[wasm_bindgen]

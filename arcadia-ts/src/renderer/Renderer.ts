@@ -26,7 +26,7 @@ export class Renderer {
 			this.app = app;
 			if (typeof app.init === "function") {
 				await app.init({
-					view: canvas,
+					canvas: canvas,
 					width: 800,
 					height: 600,
 					backgroundColor: 0x1a1a1a,
@@ -35,7 +35,7 @@ export class Renderer {
 				// As a very small compatibility fallback, set up the stage renderer manually
 				// (this path is unlikely on modern Pixi builds).
 				this.app = new Application({
-					view: canvas,
+					canvas: canvas,
 					width: 800,
 					height: 600,
 					backgroundColor: 0x1a1a1a,
@@ -50,31 +50,27 @@ export class Renderer {
 				const g = new Graphics();
 				// 0.0 - Player (Blue Circle)
 				g.clear();
-				g.beginFill(0x3498db);
-				g.drawCircle(0, 0, 16);
-				g.endFill();
+				g.fill(0x3498db);
+				g.circle(0, 0, 16);
 				this.textures[0] = this.app.renderer.generateTexture(g);
 
 				// 1.0 - Bullet (Yellow Star/Small Square)
 				g.clear();
-				g.beginFill(0xf1c40f);
-				g.drawRect(-4, -4, 8, 8);
-				g.endFill();
+				g.fill(0xf1c40f);
+				g.rect(-4, -4, 8, 8);
 				this.textures[1] = this.app.renderer.generateTexture(g);
 
 				// 2.0 - Obstacle (Red Square)
 				g.clear();
-				g.beginFill(0xe74c3c);
-				g.drawRect(-16, -16, 32, 32);
-				g.endFill();
+				g.fill(0xe74c3c);
+				g.rect(-16, -16, 32, 32);
 				this.textures[2] = this.app.renderer.generateTexture(g);
 
 				// 3.0 - Wall (Dark Gray Square with border)
 				g.clear();
-				g.lineStyle(2, 0x000000);
-				g.beginFill(0x7f8c8d);
-				g.drawRect(-16, -16, 32, 32);
-				g.endFill();
+				g.setStrokeStyle({ width: 2, color: 0x000000 });
+				g.fill(0x7f8c8d);
+				g.rect(-16, -16, 32, 32);
 				this.textures[3] = this.app.renderer.generateTexture(g);
 			}
 

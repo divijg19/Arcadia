@@ -66,7 +66,7 @@ pub fn lifetime_system(world: &mut World, dt_ms: f64) {
     }
 }
 
-pub fn collision_system(world: &mut World) {
+pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
     const CELL_SIZE: f32 = 100.0;
     const GRID_COLS: usize = 20; // 2000.0 / 100.0
     const GRID_ROWS: usize = 20;
@@ -153,9 +153,17 @@ pub fn collision_system(world: &mut World) {
 
                 if overlap_x && overlap_y {
                     if is_bullet_obstacle {
+                        // Emit an explosion event (EventType 1.0) at the collision point
+                        events.push(1.0);
+                        events.push(x1);
+                        events.push(y1);
                         to_despawn.push(e1);
                         to_despawn.push(e2);
                     } else if is_bullet_wall {
+                        // Emit a spark event (EventType 2.0)
+                        events.push(2.0);
+                        events.push(x1);
+                        events.push(y1);
                         if t1 == components::Tag::Bullet {
                             to_despawn.push(e1);
                         }
