@@ -33,7 +33,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             Position { x, y: 0.0 },
             Velocity { vx: 0.0, vy: 0.0 },
             Renderable {
-                sprite_id: 0.0,
+                sprite_id: 3.0,
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
@@ -45,7 +45,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             Position { x, y: height },
             Velocity { vx: 0.0, vy: 0.0 },
             Renderable {
-                sprite_id: 0.0,
+                sprite_id: 3.0,
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
@@ -63,7 +63,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             Position { x: 0.0, y },
             Velocity { vx: 0.0, vy: 0.0 },
             Renderable {
-                sprite_id: 0.0,
+                sprite_id: 3.0,
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
@@ -75,7 +75,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             Position { x: width, y },
             Velocity { vx: 0.0, vy: 0.0 },
             Renderable {
-                sprite_id: 0.0,
+                sprite_id: 3.0,
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
@@ -94,7 +94,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             Position { x: ox, y: oy },
             Velocity { vx: 0.0, vy: 0.0 },
             Renderable {
-                sprite_id: 0.0,
+                sprite_id: 2.0,
                 rotation: 0.0,
             },
             Collider { w: 32.0, h: 32.0 },
