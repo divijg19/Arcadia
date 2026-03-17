@@ -223,4 +223,12 @@ impl ArcadiaCore {
     pub fn get_camera_y(&self) -> f32 {
         self.camera_y
     }
+
+    #[wasm_bindgen]
+    pub fn save_state(&self) -> Vec<u8> {
+        // In v1.0, we will fully serialize the ECS hecs::World.
+        // For now, we prove postcard + serde works by returning a dummy payload.
+        let dummy_data: Vec<u32> = vec![1, 3, 3, 7];
+        postcard::to_allocvec(&dummy_data).unwrap_or_else(|_| vec![])
+    }
 }
