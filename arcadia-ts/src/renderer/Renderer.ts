@@ -48,29 +48,30 @@ export class Renderer {
 			// Generate and cache textures for each sprite id so we don't recreate them per-frame
 			if (this.app) {
 				const g = new Graphics();
+
 				// 0.0 - Player (Blue Circle)
 				g.clear();
-				g.fill(0x3498db);
 				g.circle(0, 0, 16);
+				g.fill(0x3498db);
 				this.textures[0] = this.app.renderer.generateTexture(g);
 
 				// 1.0 - Bullet (Yellow Star/Small Square)
 				g.clear();
-				g.fill(0xf1c40f);
 				g.rect(-4, -4, 8, 8);
+				g.fill(0xf1c40f);
 				this.textures[1] = this.app.renderer.generateTexture(g);
 
 				// 2.0 - Obstacle (Red Square)
 				g.clear();
-				g.fill(0xe74c3c);
 				g.rect(-16, -16, 32, 32);
+				g.fill(0xe74c3c);
 				this.textures[2] = this.app.renderer.generateTexture(g);
 
 				// 3.0 - Wall (Dark Gray Square with border)
 				g.clear();
-				g.setStrokeStyle({ width: 2, color: 0x000000 });
-				g.fill(0x7f8c8d);
 				g.rect(-16, -16, 32, 32);
+				g.fill(0x7f8c8d);
+				g.stroke({ width: 2, color: 0x000000 });
 				this.textures[3] = this.app.renderer.generateTexture(g);
 			}
 
