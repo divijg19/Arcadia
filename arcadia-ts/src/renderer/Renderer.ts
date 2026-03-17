@@ -1,4 +1,4 @@
-import { Application, Container, Sprite, Texture } from "pixi.js";
+import { Application, Container, Graphics, Sprite, Texture } from "pixi.js";
 
 type PixiAsyncApp = Application & {
 	init?: (opts: {
@@ -13,6 +13,7 @@ type PixiTaggedSprite = Sprite & { _arcadiaSpriteId?: number };
 
 export class Renderer {
 	app: Application | null = null;
+	private textures: Record<number, Texture> = {};
 	private worldContainer: Container = new Container();
 	private spritePool: Array<Sprite | undefined> = [];
 
@@ -44,6 +45,39 @@ export class Renderer {
 			// Add the world container to the stage so camera transforms apply to everything in-world
 			this.app?.stage?.addChild(this.worldContainer);
 
+			// Generate and cache textures for each sprite id so we don't recreate them per-frame
+			if (this.app) {
+				const g = new Graphics();
+				// 0.0 - Player (Blue Circle)
+				g.clear();
+				g.beginFill(0x3498db);
+				g.drawCircle(0, 0, 16);
+				g.endFill();
+				this.textures[0] = this.app.renderer.generateTexture(g);
+
+				// 1.0 - Bullet (Yellow Star/Small Square)
+				g.clear();
+				g.beginFill(0xf1c40f);
+				g.drawRect(-4, -4, 8, 8);
+				g.endFill();
+				this.textures[1] = this.app.renderer.generateTexture(g);
+
+				// 2.0 - Obstacle (Red Square)
+				g.clear();
+				g.beginFill(0xe74c3c);
+				g.drawRect(-16, -16, 32, 32);
+				g.endFill();
+				this.textures[2] = this.app.renderer.generateTexture(g);
+
+				// 3.0 - Wall (Dark Gray Square with border)
+				g.clear();
+				g.lineStyle(2, 0x000000);
+				g.beginFill(0x7f8c8d);
+				g.drawRect(-16, -16, 32, 32);
+				g.endFill();
+				this.textures[3] = this.app.renderer.generateTexture(g);
+			}
+
 			// Start with an empty pool; sprites will be allocated lazily by getOrCreateSprite
 		} catch (err) {
 			// Log and rethrow so callers can surface the error in the browser console
@@ -72,21 +106,10 @@ export class Renderer {
 			}
 		}
 
-		// create a new Sprite using a white 1x1 texture and tint/scale it
-		const s = new Sprite(Texture.WHITE) as PixiTaggedSprite;
+		// Create a new Sprite from the cached texture for this spriteId
+		const tex = this.textures[spriteId] || Texture.WHITE;
+		const s = new Sprite(tex) as PixiTaggedSprite;
 		s.anchor.set(0.5);
-
-		if (spriteId === 1.0) {
-			// Bullet: small yellow square
-			s.width = 8;
-			s.height = 8;
-			s.tint = 0xffff00;
-		} else {
-			// Player / Obstacle / Wall: larger red square
-			s.width = 32;
-			s.height = 32;
-			s.tint = 0xff0000;
-		}
 
 		// Add the sprite to the world container so camera transforms apply
 		this.worldContainer.addChild(s);
