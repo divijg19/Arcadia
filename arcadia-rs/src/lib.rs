@@ -2,6 +2,8 @@ use hecs::World;
 use wasm_bindgen::prelude::*;
 
 mod components;
+#[cfg(test)]
+mod engine_tests;
 pub mod procgen;
 pub mod rng;
 mod systems;
@@ -70,6 +72,23 @@ impl ArcadiaCore {
         ));
 
         self.entities.push(ent);
+    }
+
+    // Helper used by tests: spawn a simple player entity (not exported to WASM)
+    #[cfg(test)]
+    fn spawn_entity(&mut self, x: f32, y: f32) -> hecs::Entity {
+        let ent = self.world.spawn((
+            components::Position { x, y },
+            components::Renderable {
+                sprite_id: 0.0,
+                rotation: 0.0,
+            },
+            components::Collider { w: 32.0, h: 32.0 },
+            components::InputReceiver,
+            components::Tag::Player,
+        ));
+        self.entities.push(ent);
+        ent
     }
 
     #[wasm_bindgen]

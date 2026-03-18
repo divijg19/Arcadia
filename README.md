@@ -9,15 +9,26 @@ The engine separates **simulation** from **rendering**:
 - **Rust → WebAssembly** handles deterministic simulation and core systems
 - **TypeScript** manages rendering, input, and browser integration
 
+`Arcadia` is not a general-purpose engine.  
+It is intentionally scoped for **arcade-scale games with short gameplay loops**.
+
+`Arcadia` intentionally avoids the complexity of large engines.
+
+It does not aim to provide:
+
+- 3D rendering
+- advanced physics
+- visual editors
+- asset pipelines
+
+The engine is intentionally **small and focused**.
+
 This architecture allows games to be:
 
 - fast to iterate on
 - deterministic and reproducible
 - lightweight and browser-native
 - reusable across many projects
-
-`Arcadia` is not a general-purpose engine.  
-It is intentionally scoped for **arcade-scale games with short gameplay loops**.
 
 ---
 
@@ -69,9 +80,31 @@ Deployment:
 
 ---
 
+# Development Workflow
+
+Install dependencies.
+
+```bash
+bun install
+```
+
+Build Rust WASM runtime.
+
+```bash
+wasm-pack build arcadia-rs --target web
+```
+
+Run development server.
+
+```bash
+bun dev
+```
+
+---
+
 # Repository Structure
 
-
+```
 Arcadia/
 │
 ├─ Arcadia-rs/ # Rust simulation runtime
@@ -83,7 +116,7 @@ Arcadia/
 ├─ tools/ # asset utilities
 ├─ docs/
 └─ scripts/
-
+```
 
 ---
 
@@ -164,8 +197,6 @@ No installation required.
 
 A micro roguelike survival arena.
 
-Features:
-
 - top-down combat
 - enemy waves
 - arena rotation and scrolling
@@ -174,8 +205,6 @@ Features:
 ---
 
 A browser puzzle game inspired by escape rooms.
-
-Features:
 
 - logic puzzles
 - clue discovery
@@ -186,49 +215,9 @@ Features:
 
 An infinite procedural platformer RPG.
 
-Features:
-
 - procedurally generated dungeon descent
 - multiple gameplay modes
 - character stats and progression
-
----
-
-# Development Workflow
-
-Install dependencies.
-
-```bash
-bun install
-```
-
-Build Rust WASM runtime.
-
-```bash
-wasm-pack build arcadia-rs --target web
-```
-
-Run development server.
-
-```bash
-bun dev
-```
-
-
----
-
-# Project Scope
-
-`Arcadia` intentionally avoids the complexity of large engines.
-
-It does not aim to provide:
-
-- 3D rendering
-- advanced physics
-- visual editors
-- asset pipelines
-
-The engine is intentionally **small and focused**.
 
 ---
 

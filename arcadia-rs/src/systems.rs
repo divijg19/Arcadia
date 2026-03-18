@@ -1,8 +1,9 @@
 use hecs::World;
+use std::collections::HashSet;
 
 use crate::components;
 
-type CellEntry = (hecs::Entity, f32, f32, f32, f32, components::Tag);
+pub type CellEntry = (hecs::Entity, f32, f32, f32, f32, components::Tag);
 
 // Input bitmask constants
 const UP: u8 = 1;
@@ -72,10 +73,9 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
     const GRID_ROWS: usize = 20;
     const GRID_SIZE: usize = GRID_COLS * GRID_ROWS;
 
-    // 1. Initialize a flat grid of 400 cells
     let mut grid: Vec<Vec<CellEntry>> = vec![Vec::new(); GRID_SIZE];
 
-    // 2. Populate the grid
+    // 1. Populate the grid
     for (entity, pos, col, tag) in world
         .query::<(
             hecs::Entity,
@@ -85,34 +85,11 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
         )>()
         .iter()
     {
-        // Calculate the grid bounds this AABB touches
-        let min_x_f = (pos.x - col.w * 0.5) / CELL_SIZE;
-        let max_x_f = (pos.x + col.w * 0.5) / CELL_SIZE;
-        let min_y_f = (pos.y - col.h * 0.5) / CELL_SIZE;
-        let max_y_f = (pos.y + col.h * 0.5) / CELL_SIZE;
+        let min_x = (((pos.x - col.w / 2.0) / CELL_SIZE).max(0.0) as usize).min(GRID_COLS - 1);
+        let max_x = (((pos.x + col.w / 2.0) / CELL_SIZE).max(0.0) as usize).min(GRID_COLS - 1);
+        let min_y = (((pos.y - col.h / 2.0) / CELL_SIZE).max(0.0) as usize).min(GRID_ROWS - 1);
+        let max_y = (((pos.y + col.h / 2.0) / CELL_SIZE).max(0.0) as usize).min(GRID_ROWS - 1);
 
-        let min_x = if min_x_f < 0.0 {
-            0
-        } else {
-            std::cmp::min(min_x_f as usize, GRID_COLS - 1)
-        };
-        let max_x = if max_x_f < 0.0 {
-            0
-        } else {
-            std::cmp::min(max_x_f as usize, GRID_COLS - 1)
-        };
-        let min_y = if min_y_f < 0.0 {
-            0
-        } else {
-            std::cmp::min(min_y_f as usize, GRID_ROWS - 1)
-        };
-        let max_y = if max_y_f < 0.0 {
-            0
-        } else {
-            std::cmp::min(max_y_f as usize, GRID_ROWS - 1)
-        };
-
-        // Insert into every overlapping cell
         for x in min_x..=max_x {
             for y in min_y..=max_y {
                 let idx = y * GRID_COLS + x;
@@ -122,63 +99,108 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
     }
 
     let mut to_despawn: Vec<hecs::Entity> = Vec::new();
+    let mut resolutions: Vec<(hecs::Entity, f32, f32)> = Vec::new();
+    let mut processed_pairs = HashSet::new(); // Tracks entity pairs to avoid double-evaluating overlaps
 
-    // 3. Evaluate collisions only within individual cells
+    // 2. Evaluate collisions
     for cell in grid {
         let len = cell.len();
         if len < 2 {
             continue;
-        } // No collisions possible in an empty or single-entity cell
+        }
 
         for i in 0..len {
             for j in (i + 1)..len {
                 let (e1, x1, y1, w1, h1, t1) = cell[i];
                 let (e2, x2, y2, w2, h2, t2) = cell[j];
 
-                // Collision rules
-                let is_bullet_obstacle = (t1 == components::Tag::Bullet
-                    && t2 == components::Tag::Obstacle)
-                    || (t2 == components::Tag::Bullet && t1 == components::Tag::Obstacle);
-                let is_bullet_wall = (t1 == components::Tag::Bullet && t2 == components::Tag::Wall)
-                    || (t2 == components::Tag::Bullet && t1 == components::Tag::Wall);
-
-                if !is_bullet_obstacle && !is_bullet_wall {
-                    continue;
+                // Ensure consistent pair ordering for the HashSet
+                let pair = if e1.id() < e2.id() {
+                    (e1.id(), e2.id())
+                } else {
+                    (e2.id(), e1.id())
+                };
+                if !processed_pairs.insert(pair) {
+                    continue; // We already checked this pair in another cell!
                 }
 
-                let dx = (x1 - x2).abs();
-                let dy = (y1 - y2).abs();
-                let overlap_x = dx < ((w1 * 0.5) + (w2 * 0.5));
-                let overlap_y = dy < ((h1 * 0.5) + (h2 * 0.5));
+                let dx = x1 - x2;
+                let dy = y1 - y2;
+                let overlap_x = ((w1 * 0.5) + (w2 * 0.5)) - dx.abs();
+                let overlap_y = ((h1 * 0.5) + (h2 * 0.5)) - dy.abs();
 
-                if overlap_x && overlap_y {
+                // If bounding boxes overlap
+                if overlap_x > 0.0 && overlap_y > 0.0 {
+                    // RULE A: Bullet Destruction
+                    let is_bullet_obstacle = (t1 == components::Tag::Bullet
+                        && t2 == components::Tag::Obstacle)
+                        || (t2 == components::Tag::Bullet && t1 == components::Tag::Obstacle);
+                    let is_bullet_wall = (t1 == components::Tag::Bullet
+                        && t2 == components::Tag::Wall)
+                        || (t2 == components::Tag::Bullet && t1 == components::Tag::Wall);
+
                     if is_bullet_obstacle {
-                        // Emit an explosion event (EventType 1.0) at the collision point
-                        events.push(1.0);
-                        events.push(x1);
-                        events.push(y1);
                         to_despawn.push(e1);
                         to_despawn.push(e2);
-                    } else if is_bullet_wall {
-                        // Emit a spark event (EventType 2.0)
-                        events.push(2.0);
+                        events.push(1.0);
                         events.push(x1);
-                        events.push(y1);
+                        events.push(y1); // Boom
+                    } else if is_bullet_wall {
                         if t1 == components::Tag::Bullet {
                             to_despawn.push(e1);
                         }
                         if t2 == components::Tag::Bullet {
                             to_despawn.push(e2);
                         }
+                        events.push(2.0);
+                        events.push(x1);
+                        events.push(y1); // Clink
+                    }
+
+                    // RULE B: Kinematic Push-Out (Player vs Solid)
+                    let is_solid_1 = t1 == components::Tag::Wall || t1 == components::Tag::Obstacle;
+                    let is_solid_2 = t2 == components::Tag::Wall || t2 == components::Tag::Obstacle;
+
+                    let player_solid = if t1 == components::Tag::Player && is_solid_2 {
+                        Some((e1, dx, dy))
+                    } else if t2 == components::Tag::Player && is_solid_1 {
+                        Some((e2, -dx, -dy)) // Reverse delta for e2
+                    } else {
+                        None
+                    };
+
+                    if let Some((p_ent, p_dx, p_dy)) = player_solid {
+                        // Push out along the axis of least penetration
+                        let (push_x, push_y) = if overlap_x < overlap_y {
+                            if p_dx < 0.0 {
+                                (-overlap_x, 0.0)
+                            } else {
+                                (overlap_x, 0.0)
+                            }
+                        } else {
+                            if p_dy < 0.0 {
+                                (0.0, -overlap_y)
+                            } else {
+                                (0.0, overlap_y)
+                            }
+                        };
+                        resolutions.push((p_ent, push_x, push_y));
                     }
                 }
             }
         }
     }
 
-    // 4. Despawn (Entities might be added to this list multiple times if they overlap multiple cells,
-    // but `world.despawn().ok()` safely ignores already-despawned entities).
+    // 3. Apply Despawns
     for e in to_despawn {
         let _ = world.despawn(e).ok();
+    }
+
+    // 4. Apply Kinematic Resolutions (Wall Sliding)
+    for (ent, push_x, push_y) in resolutions {
+        if let Ok(pos) = world.query_one_mut::<&mut components::Position>(ent) {
+            pos.x += push_x;
+            pos.y += push_y;
+        }
     }
 }
