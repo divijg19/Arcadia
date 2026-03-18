@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import "./App.css";
 import { AudioEngine } from "./audio/AudioEngine";
 import { GameLoop } from "./engine/GameLoop";
@@ -28,121 +28,125 @@ type WasmModule = {
 	ArcadiaCore: { new (): ArcadiaCoreInstance };
 };
 
+type SceneState = "MENU" | "GAME";
+
 function App() {
+	const [scene, setScene] = createSignal<SceneState>("MENU");
 	const [tickCount, setTickCount] = createSignal(0);
 
+	// We hoist these so the Game loop can access them
+	let core: ArcadiaCoreInstance | null = null;
+	let wasmMemory: WebAssembly.Memory | null = null;
+	const inputManager = new InputManager();
+	const audio = new AudioEngine();
+
 	onMount(async () => {
-		// import the wasm module and initialize it (captures memory in the returned exports)
+		// Boot Phase: Load WASM immediately so it's ready when the user clicks Play
 		const mod = (await import(
 			"../../arcadia-rs/pkg/arcadia_rs.js"
 		)) as unknown as WasmModule;
 		const wasmExports: WasmInitResult | null =
 			mod && typeof mod.default === "function" ? await mod.default() : null;
 
-		const core = new mod.ArcadiaCore();
+		if (!wasmExports || !wasmExports.memory) {
+			console.error("Failed to initialize WASM memory");
+			return;
+		}
 
-		// input manager (maps keyboard state to a bitmask)
-		const inputManager = new InputManager();
-		// audio engine for synthesized SFX (initialized on first user gesture)
-		const audio = new AudioEngine();
-		// Ensure user gesture unlocks audio context
-		window.addEventListener(
-			"mousedown",
-			() => {
-				try {
-					audio.init();
-				} catch {
-					// ignore
-				}
-			},
-			{ once: true },
-		);
+		core = new mod.ArcadiaCore();
+		wasmMemory = wasmExports.memory;
+	});
 
-		// setup renderer
+	const startGame = async () => {
+		if (!core || !wasmMemory) return;
+
+		// capture stable references to avoid non-null assertions after awaits
+		const coreRef = core as ArcadiaCoreInstance;
+		const wasmMemRef = wasmMemory as WebAssembly.Memory;
+
+		// 1. Switch Scene
+		setScene("GAME");
+
+		// 2. Init Audio (Requires user interaction, so clicking 'Play' is perfect)
+		audio.init();
+
+		// 3. Init PixiJS
 		const renderer = new Renderer();
 		const canvas = document.getElementById("game-canvas") as HTMLCanvasElement;
 		await renderer.init(canvas);
 
-		// ensure we have access to WASM memory from the init result
-		if (!wasmExports || !wasmExports.memory) {
-			console.error(
-				"WASM exports or memory not available; cannot create zero-copy view",
-			);
-			return;
-		}
+		// 4. Generate a random world
+		const seed = Math.floor(Date.now() / 1000); // Unique seed per run
+		coreRef.init_world(seed);
 
-		// Cache the WebAssembly memory reference to satisfy TypeScript's nullability checks
-		const wasmMemory = wasmExports.memory as WebAssembly.Memory;
-
-		// Initialize the world procedurally in WASM with a deterministic seed
-		core.init_world(1337);
-
-		// create zero-copy view lazily inside the loop to handle WASM memory growth / reallocations
+		// 5. Start the Game Loop
 		let memoryView: Float32Array | null = null;
-
 		const loop = new GameLoop((dt_ms: number) => {
-			// read input mask from TS InputManager and apply to Rust core
 			const mask = inputManager.getMask();
-			core.apply_input(mask);
-
-			// pass raw mouse coordinates & button state to WASM (canvas-relative)
-			core.apply_mouse(
+			coreRef.apply_input(mask);
+			coreRef.apply_mouse(
 				inputManager.getMouseX(),
 				inputManager.getMouseY(),
 				inputManager.isMouseDown(),
 			);
+			coreRef.update(dt_ms);
 
-			core.update(dt_ms);
-
-			// Check if view needs to be recreated (due to WASM memory growth or vector reallocation)
-			const ptr = Number(core.get_render_buffer_ptr());
-			const len = Number(core.get_render_buffer_len());
-			if (
-				!memoryView ||
-				memoryView.buffer !== wasmMemory.buffer ||
-				memoryView.byteOffset !== ptr ||
-				memoryView.length !== len
-			) {
-				memoryView = new Float32Array(wasmMemory.buffer, ptr, len);
-			}
-
-			// draw directly from the zero-copy Float32Array. Read camera from WASM.
-			const camX = core.get_camera_x();
-			const camY = core.get_camera_y();
-			renderer.draw(memoryView as Float32Array, camX, camY);
-
-			// Process event buffer emitted from WASM (each event is 3 floats: [type, x, y])
-			const eventPtr = Number(core.get_event_buffer_ptr());
-			const eventLen = Number(core.get_event_buffer_len());
+			// Audio Events
+			const eventPtr = Number(coreRef.get_event_buffer_ptr());
+			const eventLen = Number(coreRef.get_event_buffer_len());
 			if (eventLen > 0) {
 				const eventView = new Float32Array(
-					wasmMemory.buffer,
+					wasmMemRef.buffer,
 					eventPtr,
 					eventLen,
 				);
-				const eventCount = Math.floor(eventLen / 3);
-				for (let i = 0; i < eventCount; i++) {
-					const offset = i * 3;
-					const type = eventView[offset + 0];
-					if (type === 1.0) {
-						audio.playExplosion();
-					} else if (type === 2.0) {
-						audio.playPing();
-					}
+				for (let i = 0; i < eventLen / 3; i++) {
+					const type = eventView[i * 3];
+					if (type === 1.0) audio.playExplosion();
+					else if (type === 2.0) audio.playPing();
 				}
-				core.clear_events();
+				coreRef.clear_events();
 			}
 
-			setTickCount(core.get_tick_count());
+			// Render Zero-Copy
+			const ptr = Number(coreRef.get_render_buffer_ptr());
+			const len = Number(coreRef.get_render_buffer_len());
+			if (
+				!memoryView ||
+				memoryView.buffer !== wasmMemRef.buffer ||
+				memoryView.byteOffset !== ptr ||
+				memoryView.length !== len
+			) {
+				memoryView = new Float32Array(wasmMemRef.buffer, ptr, len);
+			}
+
+			renderer.draw(
+				memoryView as Float32Array,
+				coreRef.get_camera_x(),
+				coreRef.get_camera_y(),
+			);
+			setTickCount(coreRef.get_tick_count());
 		});
 
 		loop.start();
-	});
+	};
 
 	return (
 		<div class="app-root">
-			<canvas id="game-canvas" width="800" height="600"></canvas>
-			<div class="tick-counter">Ticks: {tickCount()}</div>
+			<Show when={scene() === "MENU"}>
+				<div class="menu-screen">
+					<h1>ARCADIA ENGINE</h1>
+					<p>v0.8.0 Prototype</p>
+					<button type="button" onClick={startGame} class="play-button">
+						START GAME
+					</button>
+				</div>
+			</Show>
+
+			<Show when={scene() === "GAME"}>
+				<canvas id="game-canvas" width="800" height="600"></canvas>
+				<div class="tick-counter">Ticks: {tickCount()}</div>
+			</Show>
 		</div>
 	);
 }

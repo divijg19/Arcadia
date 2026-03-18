@@ -201,3 +201,48 @@
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 	font-size: 1.25rem;
 }
+
+/* Menu / Arcade cabinet styling for v0.8.0 Scene Router */
+.menu-screen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #1a1a1a;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	z-index: 100;
+}
+
+.menu-screen h1 {
+	font-size: 4rem;
+	margin-bottom: 0;
+	letter-spacing: 4px;
+	color: #f1c40f;
+	text-shadow: 2px 2px 0 #e74c3c;
+}
+
+.play-button {
+	margin-top: 2rem;
+	padding: 1rem 3rem;
+	font-size: 1.5rem;
+	font-weight: bold;
+	background-color: #3498db;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	box-shadow: 0 4px 0 #2980b9;
+	transition:
+		transform 0.1s,
+		box-shadow 0.1s;
+}
+
+.play-button:active {
+	transform: translateY(4px);
+	box-shadow: 0 0 0 #2980b9;
+}
