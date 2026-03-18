@@ -24,6 +24,8 @@ pub struct ArcadiaCore {
     is_mouse_down: bool,
     fire_cooldown: f64,
     event_buffer: Vec<f32>,
+    player_health: f32,
+    score: f32,
 }
 
 impl Default for ArcadiaCore {
@@ -51,6 +53,8 @@ impl ArcadiaCore {
             is_mouse_down: false,
             fire_cooldown: 0.0,
             event_buffer: Vec::new(),
+            player_health: 100.0,
+            score: 0.0,
         }
     }
 
@@ -180,6 +184,17 @@ impl ArcadiaCore {
             // Run collision detection (bullets vs obstacles) and emit events
             systems::collision_system(&mut self.world, &mut self.event_buffer);
 
+            // Inspect emitted events and update UI state (e.g., score on BOOM)
+            let mut i = 0usize;
+            while i + 2 < self.event_buffer.len() {
+                let etype = self.event_buffer[i];
+                if (etype - 1.0).abs() < f32::EPSILON {
+                    // BOOM event: increase score
+                    self.score += 10.0;
+                }
+                i += 3;
+            }
+
             // Run lifetime system to despawn expired entities
             systems::lifetime_system(&mut self.world, self.tick_rate);
 
@@ -241,6 +256,11 @@ impl ArcadiaCore {
     #[wasm_bindgen]
     pub fn get_camera_y(&self) -> f32 {
         self.camera_y
+    }
+
+    #[wasm_bindgen]
+    pub fn get_ui_state(&self) -> Vec<f32> {
+        vec![self.player_health, self.score]
     }
 
     #[wasm_bindgen]
