@@ -1,5 +1,6 @@
 import { createSignal, onMount } from "solid-js";
 import "./App.css";
+import { AudioEngine } from "./audio/AudioEngine";
 import { GameLoop } from "./engine/GameLoop";
 import { InputManager } from "./input/InputManager";
 import { Renderer } from "./renderer/Renderer";
@@ -42,6 +43,20 @@ function App() {
 
 		// input manager (maps keyboard state to a bitmask)
 		const inputManager = new InputManager();
+		// audio engine for synthesized SFX (initialized on first user gesture)
+		const audio = new AudioEngine();
+		// Ensure user gesture unlocks audio context
+		window.addEventListener(
+			"mousedown",
+			() => {
+				try {
+					audio.init();
+				} catch {
+					// ignore
+				}
+			},
+			{ once: true },
+		);
 
 		// setup renderer
 		const renderer = new Renderer();
@@ -109,12 +124,10 @@ function App() {
 				for (let i = 0; i < eventCount; i++) {
 					const offset = i * 3;
 					const type = eventView[offset + 0];
-					const x = eventView[offset + 1];
-					const y = eventView[offset + 2];
 					if (type === 1.0) {
-						console.log(`BOOM! Obstacle destroyed at ${x}, ${y}`);
+						audio.playExplosion();
 					} else if (type === 2.0) {
-						console.log(`CLINK! Bullet hit wall at ${x}, ${y}`);
+						audio.playPing();
 					}
 				}
 				core.clear_events();
