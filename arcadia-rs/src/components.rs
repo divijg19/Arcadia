@@ -33,6 +33,7 @@ pub struct Lifetime {
 pub struct Collider {
     pub w: f32,
     pub h: f32,
+    pub is_sensor: bool,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
@@ -41,4 +42,5 @@ pub enum Tag {
     Obstacle,
     Bullet,
     Wall,
+    Pickup,
 }

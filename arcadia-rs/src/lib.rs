@@ -68,7 +68,11 @@ impl ArcadiaCore {
                 sprite_id: 1.0,
                 rotation: 0.0,
             },
-            components::Collider { w: 8.0, h: 8.0 },
+            components::Collider {
+                w: 8.0,
+                h: 8.0,
+                is_sensor: false,
+            },
             components::Tag::Bullet,
             components::Lifetime {
                 remaining_ms: 2000.0,
@@ -87,7 +91,11 @@ impl ArcadiaCore {
                 sprite_id: 0.0,
                 rotation: 0.0,
             },
-            components::Collider { w: 32.0, h: 32.0 },
+            components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             components::InputReceiver,
             components::Tag::Player,
         ));
@@ -182,7 +190,7 @@ impl ArcadiaCore {
             }
 
             // Run collision detection (bullets vs obstacles) and emit events
-            systems::collision_system(&mut self.world, &mut self.event_buffer);
+            systems::collision_system(&mut self.world, &mut self.event_buffer, &mut self.score);
 
             // Inspect emitted events and update UI state (e.g., score on BOOM)
             let mut i = 0usize;
@@ -201,23 +209,38 @@ impl ArcadiaCore {
             // Keep our entity list in sync with the world (remove despawned entities)
             self.entities.retain(|e| self.world.contains(*e));
 
-            // Rebuild the flat render buffer [ID, X, Y, Rotation, SpriteId]
-            self.render_buffer.clear();
-            for entity in &self.entities {
-                if let Ok((pos, render)) = self
-                    .world
-                    .query_one_mut::<(&components::Position, &components::Renderable)>(*entity)
-                {
-                    let id = entity.id() as f32;
-                    self.render_buffer.push(id);
-                    self.render_buffer.push(pos.x);
-                    self.render_buffer.push(pos.y);
-                    self.render_buffer.push(render.rotation);
-                    self.render_buffer.push(render.sprite_id);
-                }
-            }
-
             self.accumulator -= self.tick_rate;
+        }
+
+        // After processing zero or more fixed ticks, rebuild the flat render buffer
+        // [ID, X, Y, Rotation, SpriteId] from all world entities that have a
+        // Position + Renderable. Doing this once per update() ensures tests that
+        // spawn entities and call `update(0.0)` observe a populated render buffer.
+        let mut render_data: Vec<[f32; 5]> = Vec::new();
+        for (entity, pos, render) in self
+            .world
+            .query::<(hecs::Entity, &components::Position, &components::Renderable)>()
+            .iter()
+        {
+            render_data.push([
+                entity.id() as f32,
+                pos.x,
+                pos.y,
+                render.rotation,
+                render.sprite_id,
+            ]);
+        }
+
+        // Sort by Y ascending so entities lower on screen (larger Y) render last (on top)
+        render_data.sort_by(|a, b| a[2].partial_cmp(&b[2]).unwrap_or(std::cmp::Ordering::Equal));
+
+        self.render_buffer.clear();
+        for r in render_data {
+            self.render_buffer.push(r[0]);
+            self.render_buffer.push(r[1]);
+            self.render_buffer.push(r[2]);
+            self.render_buffer.push(r[3]);
+            self.render_buffer.push(r[4]);
         }
     }
 

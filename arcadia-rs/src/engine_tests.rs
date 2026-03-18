@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::ArcadiaCore;
-    use crate::components::{Position, Tag};
+    use crate::components::{Position, Tag, Velocity};
     use crate::rng::Rng;
     use hecs;
 
@@ -42,7 +42,11 @@ mod tests {
         // Manually spawn an obstacle directly in front of it at (215, 200)
         core.world.spawn((
             Position { x: 215.0, y: 200.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Obstacle,
         ));
 
@@ -68,7 +72,11 @@ mod tests {
         let player = core.world.spawn((
             Position { x: 100.0, y: 100.0 },
             crate::components::Velocity { vx: 20.0, vy: 0.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Player,
         ));
 
@@ -76,7 +84,11 @@ mod tests {
         // Player Width=32, Wall Width=32. Left edge snap target: 132 - 16 - 16 = 100
         core.world.spawn((
             Position { x: 132.0, y: 100.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
 
@@ -120,7 +132,11 @@ mod tests {
         let player = world.spawn((
             Position { x: 100.0, y: 100.0 },
             crate::components::Velocity { vx: 20.0, vy: 20.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Player,
         ));
 
@@ -129,7 +145,11 @@ mod tests {
         world.spawn((
             Position { x: 132.0, y: 100.0 },
             crate::components::Velocity { vx: 0.0, vy: 0.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
 
@@ -150,7 +170,11 @@ mod tests {
         let player = world.spawn((
             Position { x: 100.0, y: 100.0 },
             crate::components::Velocity { vx: 0.0, vy: 20.0 }, // Moving only Y
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Player,
         ));
 
@@ -158,7 +182,11 @@ mod tests {
         world.spawn((
             Position { x: 132.0, y: 100.0 },
             crate::components::Velocity { vx: 0.0, vy: 0.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
 
@@ -177,7 +205,11 @@ mod tests {
         let player = world.spawn((
             Position { x: 100.0, y: 100.0 },
             crate::components::Velocity { vx: 200.0, vy: 0.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Player,
         ));
 
@@ -185,7 +217,11 @@ mod tests {
         world.spawn((
             Position { x: 140.0, y: 100.0 },
             crate::components::Velocity { vx: 0.0, vy: 0.0 },
-            crate::components::Collider { w: 32.0, h: 32.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
 
@@ -199,6 +235,139 @@ mod tests {
             (pos.x - expected_x).abs() < 1.0,
             "Player tunneled through the wall! Pos: {}",
             pos.x
+        );
+    }
+
+    #[test]
+    fn test_sensor_does_not_block_movement() {
+        let mut world = hecs::World::new();
+
+        // Player moving right at 20px/frame
+        let player = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            Velocity { vx: 20.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
+            Tag::Player,
+        ));
+
+        // A Sensor directly in the path
+        world.spawn((
+            Position { x: 120.0, y: 100.0 },
+            Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: true,
+            },
+            Tag::Pickup,
+        ));
+
+        // Run movement
+        crate::systems::movement_system(&mut world);
+
+        let pos = world.query_one_mut::<&Position>(player).unwrap();
+        // The player must pass straight through to 120.0, ignoring the sensor
+        assert_eq!(pos.x, 120.0, "Player was blocked by a sensor!");
+    }
+
+    #[test]
+    fn test_pickup_destruction_and_score() {
+        let mut core = ArcadiaCore::new();
+
+        // Player at 100, 100
+        core.world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
+            Tag::Player,
+        ));
+
+        // Pickup directly overlapping the player
+        core.world.spawn((
+            Position { x: 105.0, y: 100.0 },
+            crate::components::Collider {
+                w: 16.0,
+                h: 16.0,
+                is_sensor: true,
+            },
+            Tag::Pickup,
+        ));
+
+        // Initial Score is 0
+        assert_eq!(core.get_ui_state()[1], 0.0);
+
+        // Tick the engine (Movement -> Collision -> Lifetime)
+        core.update(1000.0 / 60.0);
+
+        // Check if Event 3.0 (Coin Collect) was emitted
+        assert!(
+            core.event_buffer.contains(&3.0),
+            "Expected Pickup event (3.0)"
+        );
+
+        // Score must increase by 50
+        assert_eq!(core.get_ui_state()[1], 50.0, "Score did not increase!");
+
+        // Only player should remain
+        assert_eq!(core.world.len(), 1, "Pickup was not despawned!");
+    }
+
+    #[test]
+    fn test_z_ordering_render_buffer() {
+        let mut core = ArcadiaCore::new();
+
+        // Spawn 3 entities with randomized Y coordinates
+        core.world.spawn((
+            Position { x: 0.0, y: 500.0 },
+            crate::components::Renderable {
+                sprite_id: 1.0,
+                rotation: 0.0,
+            },
+        ));
+        core.world.spawn((
+            Position { x: 0.0, y: 100.0 },
+            crate::components::Renderable {
+                sprite_id: 2.0,
+                rotation: 0.0,
+            },
+        ));
+        core.world.spawn((
+            Position { x: 0.0, y: 300.0 },
+            crate::components::Renderable {
+                sprite_id: 3.0,
+                rotation: 0.0,
+            },
+        ));
+
+        // Force a render buffer sync
+        core.update(0.0);
+
+        // Read the buffer. Every 5th float is the Y coordinate.
+        // Format: [ID, X, Y, Rot, SpriteID]
+        let ptr = core.get_render_buffer_ptr();
+        let len = core.get_render_buffer_len();
+        let slice = unsafe { std::slice::from_raw_parts(ptr, len) };
+
+        assert_eq!(len, 15, "Should have 3 entities (15 floats)");
+
+        let y1 = slice[2];
+        let y2 = slice[7];
+        let y3 = slice[12];
+
+        // Ensure they are sorted ascending by Y
+        assert!(
+            y1 <= y2 && y2 <= y3,
+            "Render buffer is not sorted by Y! Got: {}, {}, {}",
+            y1,
+            y2,
+            y3
         );
     }
 }

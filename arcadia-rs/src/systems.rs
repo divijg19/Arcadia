@@ -48,7 +48,7 @@ pub fn movement_system(world: &mut World) {
         )>()
         .iter()
     {
-        if *tag == components::Tag::Wall || *tag == components::Tag::Obstacle {
+        if (*tag == components::Tag::Wall || *tag == components::Tag::Obstacle) && !col.is_sensor {
             solids.push((pos.x, pos.y, col.w, col.h));
         }
     }
@@ -156,7 +156,7 @@ pub fn lifetime_system(world: &mut World, dt_ms: f64) {
     }
 }
 
-pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
+pub fn collision_system(world: &mut World, events: &mut Vec<f32>, score: &mut f32) {
     const CELL_SIZE: f32 = 100.0;
     const GRID_COLS: usize = 20; // 2000.0 / 100.0
     const GRID_ROWS: usize = 20;
@@ -243,6 +243,24 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
                         events.push(2.0);
                         events.push(x1);
                         events.push(y1); // Clink
+                    }
+                    // RULE C: Pickups (Player vs Pickup)
+                    let is_player_pickup = (t1 == components::Tag::Player
+                        && t2 == components::Tag::Pickup)
+                        || (t2 == components::Tag::Player && t1 == components::Tag::Pickup);
+
+                    if is_player_pickup {
+                        if t1 == components::Tag::Pickup {
+                            to_despawn.push(e1);
+                        }
+                        if t2 == components::Tag::Pickup {
+                            to_despawn.push(e2);
+                        }
+                        // Increase score and emit a coin collected event (3.0)
+                        *score += 50.0;
+                        events.push(3.0);
+                        events.push(x1);
+                        events.push(y1);
                     }
                 }
             }
