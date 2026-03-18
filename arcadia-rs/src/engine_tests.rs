@@ -3,6 +3,7 @@ mod tests {
     use crate::ArcadiaCore;
     use crate::components::{Position, Tag};
     use crate::rng::Rng;
+    use hecs;
 
     #[test]
     fn test_rng_determinism() {
@@ -63,30 +64,108 @@ mod tests {
     fn test_kinematic_wall_pushout() {
         let mut core = ArcadiaCore::new();
 
-        // Spawn Player at (100, 100)
+        // Spawn Player at (100, 100) moving right at 20.0 px/frame
         let player = core.world.spawn((
             Position { x: 100.0, y: 100.0 },
+            crate::components::Velocity { vx: 20.0, vy: 0.0 },
             crate::components::Collider { w: 32.0, h: 32.0 },
             Tag::Player,
         ));
 
-        // Spawn Wall at (120, 100)
-        // Player Width=32, Wall Width=32. Center distance is 20.
-        // Overlap = (16 + 16) - 20 = 12 pixels of overlap.
+        // Spawn Wall at (132, 100)
+        // Player Width=32, Wall Width=32. Left edge snap target: 132 - 16 - 16 = 100
         core.world.spawn((
-            Position { x: 120.0, y: 100.0 },
+            Position { x: 132.0, y: 100.0 },
             crate::components::Collider { w: 32.0, h: 32.0 },
             Tag::Wall,
         ));
 
-        // Tick the collision system
-        core.update(1000.0 / 60.0);
+        // Run axis-separated movement system directly
+        crate::systems::movement_system(&mut core.world);
 
-        // Player should be pushed Left by 12 pixels (100.0 - 12.0 = 88.0)
+        // Player should be snapped back to exactly 100.0
         let player_pos = core.world.query_one_mut::<&Position>(player).unwrap();
         assert_eq!(
-            player_pos.x, 88.0,
-            "Player should be pushed out of the wall"
+            player_pos.x, 100.0,
+            "Player should be snapped flush against the wall"
         );
+    }
+
+    #[test]
+    fn test_procgen_clear_spawn_zone() {
+        let mut core = ArcadiaCore::new();
+        core.init_world(42);
+
+        let center_x = 1000.0;
+        let center_y = 1000.0;
+
+        for (pos, tag) in core.world.query::<(&Position, &Tag)>().iter() {
+            if *tag == Tag::Obstacle {
+                let dx = pos.x - center_x;
+                let dy = pos.y - center_y;
+                let dist = (dx * dx + dy * dy).sqrt();
+                assert!(
+                    dist >= 100.0,
+                    "Obstacle spawned inside the player clear zone!"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_perfect_wall_slide() {
+        let mut world = hecs::World::new();
+
+        // Player is moving Right AND Down (Diagonal into a wall)
+        let player = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Velocity { vx: 20.0, vy: 20.0 },
+            crate::components::Collider { w: 32.0, h: 32.0 },
+            Tag::Player,
+        ));
+
+        // Wall is to the Right (X = 132.0).
+        // Player should slide DOWN the wall, but be stopped on the X axis.
+        world.spawn((
+            Position { x: 132.0, y: 100.0 },
+            crate::components::Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider { w: 32.0, h: 32.0 },
+            Tag::Wall,
+        ));
+
+        crate::systems::movement_system(&mut world);
+
+        let pos = world.query_one_mut::<&Position>(player).unwrap();
+        // X snapped to exactly 100.0 (Left edge of wall: 132 - 16 - 16)
+        assert_eq!(pos.x, 100.0);
+        // Y moved freely by 20.0
+        assert_eq!(pos.y, 120.0);
+    }
+
+    #[test]
+    fn test_flush_edge_sliding_no_lag() {
+        let mut world = hecs::World::new();
+
+        // Player is perfectly flush against a wall on the X axis, moving DOWN
+        let player = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Velocity { vx: 0.0, vy: 20.0 }, // Moving only Y
+            crate::components::Collider { w: 32.0, h: 32.0 },
+            Tag::Player,
+        ));
+
+        // Wall is perfectly flush (Distance 32, so edges touch exactly)
+        world.spawn((
+            Position { x: 132.0, y: 100.0 },
+            crate::components::Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider { w: 32.0, h: 32.0 },
+            Tag::Wall,
+        ));
+
+        crate::systems::movement_system(&mut world);
+
+        let pos = world.query_one_mut::<&Position>(player).unwrap();
+        // Player should move down freely to 120.0 without getting caught by the flush X wall
+        assert_eq!(pos.y, 120.0);
     }
 }

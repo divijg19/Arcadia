@@ -86,10 +86,19 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
         y += 32.0;
     }
 
-    // Spawn internal obstacles procedurally
-    for _ in 0..2000 {
+    // Spawn internal obstacles procedurally, but avoid the central player spawn area
+    let mut spawned = 0;
+    while spawned < 2000 {
         let ox = rng.next_range(100.0, width - 100.0);
         let oy = rng.next_range(100.0, height - 100.0);
+
+        // Do not spawn within 100 pixels of the center player spawn
+        let dx = ox - (width / 2.0);
+        let dy = oy - (height / 2.0);
+        if (dx * dx + dy * dy).sqrt() < 100.0 {
+            continue; // Skip and try again
+        }
+
         let ent = world.spawn((
             Position { x: ox, y: oy },
             Velocity { vx: 0.0, vy: 0.0 },
@@ -101,6 +110,7 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             Tag::Obstacle,
         ));
         entities.push(ent);
+        spawned += 1;
     }
 
     entities

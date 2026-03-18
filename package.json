@@ -8,6 +8,8 @@
   ],
   "scripts": {
     "dev": "wasm-pack build arcadia-rs --target web && cd arcadia-ts && bun run dev",
+    "test": "bun run test:rs",
+    "test:rs": "cd arcadia-rs && cargo test",
     "format": "bun run format:rs && bun run format:ts",
     "format:rs": "cd arcadia-rs && cargo fmt --all",
     "format:ts": "cd arcadia-ts && bun run format",

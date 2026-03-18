@@ -35,11 +35,85 @@ pub fn apply_input_system(world: &mut World, input_mask: u8) {
 }
 
 pub fn movement_system(world: &mut World) {
-    // Move entities according to their velocity
-    let mut query = world.query::<(&mut components::Position, &components::Velocity)>();
-    for (pos, vel) in query.iter() {
-        pos.x += vel.vx;
-        pos.y += vel.vy;
+    // Axis-separated movement with simple solid collision handling (walls & obstacles)
+    // 1. Collect all static solids (Walls and Obstacles) into a temporary vector
+    let mut solids = Vec::new();
+    for (pos, col, tag) in world
+        .query::<(
+            &components::Position,
+            &components::Collider,
+            &components::Tag,
+        )>()
+        .iter()
+    {
+        if *tag == components::Tag::Wall || *tag == components::Tag::Obstacle {
+            solids.push((pos.x, pos.y, col.w, col.h));
+        }
+    }
+
+    // A helper closure for AABB overlap
+    let overlaps =
+        |px: f32, py: f32, pw: f32, ph: f32, sx: f32, sy: f32, sw: f32, sh: f32| -> bool {
+            let dx = (px - sx).abs();
+            let dy = (py - sy).abs();
+            let epsilon = 0.01; // Prevents "flush" edges from triggering overlap
+            dx < ((pw * 0.5) + (sw * 0.5) - epsilon) && dy < ((ph * 0.5) + (sh * 0.5) - epsilon)
+        };
+
+    // 2. Move moving entities axis-by-axis
+    let mut query = world.query::<(
+        &mut components::Position,
+        &mut components::Velocity,
+        &components::Collider,
+        &components::Tag,
+    )>();
+    for (pos, vel, col, tag) in query.iter() {
+        // We only do complex wall-sliding for the Player.
+        // Bullets just move (they are handled by collision_system).
+        if *tag != components::Tag::Player {
+            pos.x += vel.vx;
+            pos.y += vel.vy;
+            // World bounds clamp: keep entities inside 0..2000 range
+            pos.x = pos.x.clamp(0.0, 2000.0);
+            pos.y = pos.y.clamp(0.0, 2000.0);
+            continue;
+        }
+
+        // --- X AXIS MOVEMENT ---
+        if vel.vx != 0.0 {
+            pos.x += vel.vx;
+            // Check collisions against all solids
+            for &(sx, sy, sw, sh) in &solids {
+                if overlaps(pos.x, pos.y, col.w, col.h, sx, sy, sw, sh) {
+                    // Collision detected! Snap flush against the wall.
+                    if vel.vx > 0.0 {
+                        pos.x = sx - (sw * 0.5) - (col.w * 0.5); // Snap to left edge of solid
+                    } else {
+                        pos.x = sx + (sw * 0.5) + (col.w * 0.5); // Snap to right edge of solid
+                    }
+                    vel.vx = 0.0;
+                    break; // Only resolve one solid per axis to prevent jitter
+                }
+            }
+        }
+
+        // --- Y AXIS MOVEMENT ---
+        if vel.vy != 0.0 {
+            pos.y += vel.vy;
+            // Check collisions against all solids
+            for &(sx, sy, sw, sh) in &solids {
+                if overlaps(pos.x, pos.y, col.w, col.h, sx, sy, sw, sh) {
+                    // Collision detected! Snap flush against the wall.
+                    if vel.vy > 0.0 {
+                        pos.y = sy - (sh * 0.5) - (col.h * 0.5); // Snap to top edge of solid
+                    } else {
+                        pos.y = sy + (sh * 0.5) + (col.h * 0.5); // Snap to bottom edge of solid
+                    }
+                    vel.vy = 0.0;
+                    break;
+                }
+            }
+        }
 
         // World bounds clamp: keep entities inside 0..2000 range
         pos.x = pos.x.clamp(0.0, 2000.0);
@@ -99,7 +173,6 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
     }
 
     let mut to_despawn: Vec<hecs::Entity> = Vec::new();
-    let mut resolutions: Vec<(hecs::Entity, f32, f32)> = Vec::new();
     let mut processed_pairs = HashSet::new(); // Tracks entity pairs to avoid double-evaluating overlaps
 
     // 2. Evaluate collisions
@@ -156,36 +229,6 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
                         events.push(x1);
                         events.push(y1); // Clink
                     }
-
-                    // RULE B: Kinematic Push-Out (Player vs Solid)
-                    let is_solid_1 = t1 == components::Tag::Wall || t1 == components::Tag::Obstacle;
-                    let is_solid_2 = t2 == components::Tag::Wall || t2 == components::Tag::Obstacle;
-
-                    let player_solid = if t1 == components::Tag::Player && is_solid_2 {
-                        Some((e1, dx, dy))
-                    } else if t2 == components::Tag::Player && is_solid_1 {
-                        Some((e2, -dx, -dy)) // Reverse delta for e2
-                    } else {
-                        None
-                    };
-
-                    if let Some((p_ent, p_dx, p_dy)) = player_solid {
-                        // Push out along the axis of least penetration
-                        let (push_x, push_y) = if overlap_x < overlap_y {
-                            if p_dx < 0.0 {
-                                (-overlap_x, 0.0)
-                            } else {
-                                (overlap_x, 0.0)
-                            }
-                        } else {
-                            if p_dy < 0.0 {
-                                (0.0, -overlap_y)
-                            } else {
-                                (0.0, overlap_y)
-                            }
-                        };
-                        resolutions.push((p_ent, push_x, push_y));
-                    }
                 }
             }
         }
@@ -196,11 +239,5 @@ pub fn collision_system(world: &mut World, events: &mut Vec<f32>) {
         let _ = world.despawn(e).ok();
     }
 
-    // 4. Apply Kinematic Resolutions (Wall Sliding)
-    for (ent, push_x, push_y) in resolutions {
-        if let Ok(pos) = world.query_one_mut::<&mut components::Position>(ent) {
-            pos.x += push_x;
-            pos.y += push_y;
-        }
-    }
+    // 4. No kinematic resolutions here; movement_system handles player/solid behavior
 }
