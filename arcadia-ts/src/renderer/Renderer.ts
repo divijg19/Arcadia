@@ -1,4 +1,34 @@
-import { Application, Container, Graphics, Sprite, Texture } from "pixi.js";
+import {
+	Application,
+	Container,
+	Graphics,
+	Sprite,
+	Spritesheet,
+	Texture,
+} from "pixi.js";
+
+// Minimal type for a JSON texture atlas (only the fields we use)
+type AtlasData = {
+	frames: Record<
+		string,
+		{
+			frame: { x: number; y: number; w: number; h: number };
+			rotated?: boolean;
+			trimmed?: boolean;
+			spriteSourceSize?: { x: number; y: number; w: number; h: number };
+			sourceSize?: { w: number; h: number };
+			pivot?: { x: number; y: number };
+		}
+	>;
+	meta: {
+		scale: string | number;
+		size?: { w: number; h: number };
+		image?: string;
+		app?: string;
+		format?: string;
+		version?: string;
+	};
+};
 
 type PixiAsyncApp = Application & {
 	init?: (opts: {
@@ -13,7 +43,8 @@ type PixiTaggedSprite = Sprite & { _arcadiaSpriteId?: number };
 
 export class Renderer {
 	app: Application | null = null;
-	private textures: Record<number, Texture> = {};
+	private sheet: Spritesheet | null = null;
+	private spriteMap: string[] = ["player", "bullet", "obstacle", "wall"];
 	private worldContainer: Container = new Container();
 	private spritePool: Array<Sprite | undefined> = [];
 
@@ -45,34 +76,47 @@ export class Renderer {
 			// Add the world container to the stage so camera transforms apply to everything in-world
 			this.app?.stage?.addChild(this.worldContainer);
 
-			// Generate and cache textures for each sprite id so we don't recreate them per-frame
+			// Simulate a single spritesheet atlas containing all frames side-by-side
 			if (this.app) {
 				const g = new Graphics();
 
-				// 0.0 - Player (Blue Circle)
+				// Draw shapes into a 128x32 atlas layout (4 tiles of 32x32)
+				// "player" at (16,16)
 				g.clear();
-				g.circle(0, 0, 16);
+				g.circle(16, 16, 16);
 				g.fill(0x3498db);
-				this.textures[0] = this.app.renderer.generateTexture(g);
 
-				// 1.0 - Bullet (Yellow Star/Small Square)
-				g.clear();
-				g.rect(-4, -4, 8, 8);
+				// "bullet" at (48,16) - 8x8 centered -> (44, 12, 8, 8)
+				g.rect(44, 12, 8, 8);
 				g.fill(0xf1c40f);
-				this.textures[1] = this.app.renderer.generateTexture(g);
 
-				// 2.0 - Obstacle (Red Square)
-				g.clear();
-				g.rect(-16, -16, 32, 32);
+				// "obstacle" at (80,16) - 32x32 centered -> (64, 0, 32, 32)
+				g.rect(64, 0, 32, 32);
 				g.fill(0xe74c3c);
-				this.textures[2] = this.app.renderer.generateTexture(g);
 
-				// 3.0 - Wall (Dark Gray Square with border)
-				g.clear();
-				g.rect(-16, -16, 32, 32);
+				// "wall" at (112,16) - 32x32 centered -> (96, 0, 32, 32)
+				g.rect(96, 0, 32, 32);
 				g.fill(0x7f8c8d);
 				g.stroke({ width: 2, color: 0x000000 });
-				this.textures[3] = this.app.renderer.generateTexture(g);
+
+				// Generate a single texture that contains all frames
+				const atlasTexture = this.app.renderer.generateTexture(g);
+				const baseTexture = atlasTexture.baseTexture;
+
+				// Define a minimal atlas JSON describing frame rectangles (typed)
+				const atlasData: AtlasData = {
+					frames: {
+						player: { frame: { x: 0, y: 0, w: 32, h: 32 } },
+						bullet: { frame: { x: 32, y: 0, w: 32, h: 32 } },
+						obstacle: { frame: { x: 64, y: 0, w: 32, h: 32 } },
+						wall: { frame: { x: 96, y: 0, w: 32, h: 32 } },
+					},
+					meta: { scale: "1" },
+				};
+
+				// Parse into a Spritesheet so frames can be addressed by name
+				this.sheet = new Spritesheet(baseTexture, atlasData);
+				await this.sheet.parse();
 			}
 
 			// Start with an empty pool; sprites will be allocated lazily by getOrCreateSprite
@@ -103,8 +147,15 @@ export class Renderer {
 			}
 		}
 
-		// Create a new Sprite from the cached texture for this spriteId
-		const tex = this.textures[spriteId] || Texture.WHITE;
+		// Create a new Sprite from the spritesheet frame (by name) or fall back to `Texture.WHITE`
+		let tex = Texture.WHITE;
+		if (this.sheet) {
+			const idx = Math.trunc(spriteId);
+			const frameName = this.spriteMap[idx];
+			if (frameName && this.sheet.textures[frameName]) {
+				tex = this.sheet.textures[frameName];
+			}
+		}
 		const s = new Sprite(tex) as PixiTaggedSprite;
 		s.anchor.set(0.5);
 
