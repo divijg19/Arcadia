@@ -106,6 +106,7 @@ function App() {
 					const type = eventView[i * 3];
 					if (type === 1.0) audio.playExplosion();
 					else if (type === 2.0) audio.playPing();
+					else if (type === 3.0) audio.playPing();
 				}
 				coreRef.clear_events();
 			}

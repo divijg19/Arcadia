@@ -44,7 +44,13 @@ type PixiTaggedSprite = Sprite & { _arcadiaSpriteId?: number };
 export class Renderer {
 	app: Application | null = null;
 	private sheet: Spritesheet | null = null;
-	private spriteMap: string[] = ["player", "bullet", "obstacle", "wall"];
+	private spriteMap: string[] = [
+		"player",
+		"bullet",
+		"obstacle",
+		"wall",
+		"pickup",
+	];
 	private worldContainer: Container = new Container();
 	private spritePool: Array<Sprite | undefined> = [];
 
@@ -80,7 +86,7 @@ export class Renderer {
 			if (this.app) {
 				const g = new Graphics();
 
-				// Draw shapes into a 128x32 atlas layout (4 tiles of 32x32)
+				// Draw shapes into a 160x32 atlas layout (5 tiles of 32x32)
 				// "player" at (16,16)
 				g.clear();
 				g.circle(16, 16, 16);
@@ -99,6 +105,11 @@ export class Renderer {
 				g.fill(0x7f8c8d);
 				g.stroke({ width: 2, color: 0x000000 });
 
+				// "pickup" at (144,16) - 16x16 centered -> (136, 8, 16, 16)
+				// Draw a small green square to represent a collectible
+				g.rect(136, 8, 16, 16);
+				g.fill(0x2ecc71);
+
 				// Generate a single texture that contains all frames
 				const atlasTexture = this.app.renderer.generateTexture(g);
 				const baseTexture = atlasTexture.baseTexture;
@@ -110,6 +121,7 @@ export class Renderer {
 						bullet: { frame: { x: 32, y: 0, w: 32, h: 32 } },
 						obstacle: { frame: { x: 64, y: 0, w: 32, h: 32 } },
 						wall: { frame: { x: 96, y: 0, w: 32, h: 32 } },
+						pickup: { frame: { x: 128, y: 0, w: 32, h: 32 } },
 					},
 					meta: { scale: "1" },
 				};

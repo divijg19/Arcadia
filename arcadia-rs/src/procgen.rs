@@ -21,7 +21,11 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             rotation: 0.0,
         },
         InputReceiver,
-        Collider { w: 32.0, h: 32.0 },
+        Collider {
+            w: 32.0,
+            h: 32.0,
+            is_sensor: false,
+        },
         Tag::Player,
     ));
     entities.push(player);
@@ -36,7 +40,11 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 sprite_id: 3.0,
                 rotation: 0.0,
             },
-            Collider { w: 32.0, h: 32.0 },
+            Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
         entities.push(top);
@@ -48,7 +56,11 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 sprite_id: 3.0,
                 rotation: 0.0,
             },
-            Collider { w: 32.0, h: 32.0 },
+            Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
         entities.push(bottom);
@@ -66,7 +78,11 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 sprite_id: 3.0,
                 rotation: 0.0,
             },
-            Collider { w: 32.0, h: 32.0 },
+            Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
         entities.push(left);
@@ -78,7 +94,11 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 sprite_id: 3.0,
                 rotation: 0.0,
             },
-            Collider { w: 32.0, h: 32.0 },
+            Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Wall,
         ));
         entities.push(right);
@@ -109,11 +129,36 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 sprite_id: 2.0,
                 rotation: 0.0,
             },
-            Collider { w: 32.0, h: 32.0 },
+            Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+            },
             Tag::Obstacle,
         ));
         entities.push(ent);
         spawned += 1;
+    }
+
+    // Spawn Pickups (Sensors that can overlap geometry)
+    for _ in 0..50 {
+        let px = rng.next_range(100.0, width - 100.0);
+        let py = rng.next_range(100.0, height - 100.0);
+        let ent = world.spawn((
+            Position { x: px, y: py },
+            Velocity { vx: 0.0, vy: 0.0 },
+            Renderable {
+                sprite_id: 4.0,
+                rotation: 0.0,
+            },
+            Collider {
+                w: 16.0,
+                h: 16.0,
+                is_sensor: true,
+            },
+            Tag::Pickup,
+        ));
+        entities.push(ent);
     }
 
     entities
