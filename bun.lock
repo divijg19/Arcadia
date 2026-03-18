@@ -5,6 +5,7 @@
     "": {
       "name": "arcadia",
       "devDependencies": {
+        "@biomejs/biome": "^2.4.7",
         "@types/bun": "^1.3.10",
       },
       "peerDependencies": {
@@ -13,17 +14,16 @@
     },
     "arcadia-ts": {
       "name": "arcadia-ts",
-      "version": "0.4.3",
+      "version": "0.6.0",
       "dependencies": {
-        "pixi.js": "latest",
-        "solid-js": "latest",
+        "pixi.js": "^8.17.1",
+        "solid-js": "^1.9.11",
       },
       "devDependencies": {
-        "@biomejs/biome": "latest",
-        "@types/node": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
+        "@types/node": "^25.5.0",
+        "typescript": "~5.9.3",
+        "vite": "^8.0.0",
+        "vite-plugin-solid": "^2.11.11",
       },
     },
   },
