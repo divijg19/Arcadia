@@ -21,6 +21,7 @@ type ArcadiaCoreInstance = {
 	clear_events(): void;
 	update(dt_ms: number): void;
 	init_world(seed: number): void;
+	get_ui_state(): Float32Array;
 };
 
 type WasmModule = {
@@ -33,6 +34,7 @@ type SceneState = "MENU" | "GAME";
 function App() {
 	const [scene, setScene] = createSignal<SceneState>("MENU");
 	const [tickCount, setTickCount] = createSignal(0);
+	const [score, setScore] = createSignal(0);
 
 	// We hoist these so the Game loop can access them
 	let core: ArcadiaCoreInstance | null = null;
@@ -126,6 +128,16 @@ function App() {
 				coreRef.get_camera_y(),
 			);
 			setTickCount(coreRef.get_tick_count());
+
+			// Update UI state (score, health, etc.) from WASM
+			try {
+				const uiState = coreRef.get_ui_state();
+				if (uiState && uiState.length >= 2) {
+					setScore(uiState[1]);
+				}
+			} catch {
+				// ignore if WASM bridge not ready
+			}
 		});
 
 		loop.start();
@@ -146,6 +158,7 @@ function App() {
 			<Show when={scene() === "GAME"}>
 				<canvas id="game-canvas" width="800" height="600"></canvas>
 				<div class="tick-counter">Ticks: {tickCount()}</div>
+				<div class="score-counter">Score: {score()}</div>
 			</Show>
 		</div>
 	);

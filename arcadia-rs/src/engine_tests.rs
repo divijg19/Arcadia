@@ -168,4 +168,37 @@ mod tests {
         // Player should move down freely to 120.0 without getting caught by the flush X wall
         assert_eq!(pos.y, 120.0);
     }
+
+    #[test]
+    fn test_high_speed_tunneling_prevention() {
+        let mut world = hecs::World::new();
+
+        // Player moving incredibly fast to the right
+        let player = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Velocity { vx: 200.0, vy: 0.0 },
+            crate::components::Collider { w: 32.0, h: 32.0 },
+            Tag::Player,
+        ));
+
+        // A thin wall directly in the path
+        world.spawn((
+            Position { x: 140.0, y: 100.0 },
+            crate::components::Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider { w: 32.0, h: 32.0 },
+            Tag::Wall,
+        ));
+
+        crate::systems::movement_system(&mut world);
+
+        let pos = world.query_one_mut::<&Position>(player).unwrap();
+        // The player must NOT be at 300.0. They should have stopped exactly flush with the wall.
+        // Wall left edge = 140 - 16 = 124. Player right edge = x + 16. Flush X = 108.
+        let expected_x = 108.0;
+        assert!(
+            (pos.x - expected_x).abs() < 1.0,
+            "Player tunneled through the wall! Pos: {}",
+            pos.x
+        );
+    }
 }

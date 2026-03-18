@@ -35,9 +35,11 @@ pub fn apply_input_system(world: &mut World, input_mask: u8) {
 }
 
 pub fn movement_system(world: &mut World) {
-    // Axis-separated movement with simple solid collision handling (walls & obstacles)
+    // Axis-separated movement with swept-step collision prevention
     // 1. Collect all static solids (Walls and Obstacles) into a temporary vector
     let mut solids = Vec::new();
+
+    // Build solids list with current positions (entity positions may change per frame)
     for (pos, col, tag) in world
         .query::<(
             &components::Position,
@@ -51,71 +53,84 @@ pub fn movement_system(world: &mut World) {
         }
     }
 
-    // A helper closure for AABB overlap
     let overlaps =
         |px: f32, py: f32, pw: f32, ph: f32, sx: f32, sy: f32, sw: f32, sh: f32| -> bool {
             let dx = (px - sx).abs();
             let dy = (py - sy).abs();
-            let epsilon = 0.01; // Prevents "flush" edges from triggering overlap
+            let epsilon = 0.01;
             dx < ((pw * 0.5) + (sw * 0.5) - epsilon) && dy < ((ph * 0.5) + (sh * 0.5) - epsilon)
         };
 
-    // 2. Move moving entities axis-by-axis
     let mut query = world.query::<(
         &mut components::Position,
         &mut components::Velocity,
         &components::Collider,
         &components::Tag,
     )>();
+
     for (pos, vel, col, tag) in query.iter() {
-        // We only do complex wall-sliding for the Player.
-        // Bullets just move (they are handled by collision_system).
         if *tag != components::Tag::Player {
             pos.x += vel.vx;
             pos.y += vel.vy;
-            // World bounds clamp: keep entities inside 0..2000 range
             pos.x = pos.x.clamp(0.0, 2000.0);
             pos.y = pos.y.clamp(0.0, 2000.0);
             continue;
         }
 
-        // --- X AXIS MOVEMENT ---
+        // --- X AXIS SWEEP ---
         if vel.vx != 0.0 {
-            pos.x += vel.vx;
-            // Check collisions against all solids
-            for &(sx, sy, sw, sh) in &solids {
-                if overlaps(pos.x, pos.y, col.w, col.h, sx, sy, sw, sh) {
-                    // Collision detected! Snap flush against the wall.
-                    if vel.vx > 0.0 {
-                        pos.x = sx - (sw * 0.5) - (col.w * 0.5); // Snap to left edge of solid
-                    } else {
-                        pos.x = sx + (sw * 0.5) + (col.w * 0.5); // Snap to right edge of solid
-                    }
-                    vel.vx = 0.0;
-                    break; // Only resolve one solid per axis to prevent jitter
-                }
-            }
-        }
+            let steps = vel.vx.abs().ceil() as i32;
+            let step_x = vel.vx / steps as f32;
 
-        // --- Y AXIS MOVEMENT ---
-        if vel.vy != 0.0 {
-            pos.y += vel.vy;
-            // Check collisions against all solids
-            for &(sx, sy, sw, sh) in &solids {
-                if overlaps(pos.x, pos.y, col.w, col.h, sx, sy, sw, sh) {
-                    // Collision detected! Snap flush against the wall.
-                    if vel.vy > 0.0 {
-                        pos.y = sy - (sh * 0.5) - (col.h * 0.5); // Snap to top edge of solid
-                    } else {
-                        pos.y = sy + (sh * 0.5) + (col.h * 0.5); // Snap to bottom edge of solid
+            for _ in 0..steps {
+                let next_x = pos.x + step_x;
+                let mut collided = false;
+                for &(sx, sy, sw, sh) in &solids {
+                    if overlaps(next_x, pos.y, col.w, col.h, sx, sy, sw, sh) {
+                        collided = true;
+                        vel.vx = 0.0;
+                        if step_x > 0.0 {
+                            pos.x = sx - (sw * 0.5) - (col.w * 0.5);
+                        } else {
+                            pos.x = sx + (sw * 0.5) + (col.w * 0.5);
+                        }
+                        break;
                     }
-                    vel.vy = 0.0;
+                }
+                if collided {
                     break;
                 }
+                pos.x = next_x;
             }
         }
 
-        // World bounds clamp: keep entities inside 0..2000 range
+        // --- Y AXIS SWEEP ---
+        if vel.vy != 0.0 {
+            let steps = vel.vy.abs().ceil() as i32;
+            let step_y = vel.vy / steps as f32;
+
+            for _ in 0..steps {
+                let next_y = pos.y + step_y;
+                let mut collided = false;
+                for &(sx, sy, sw, sh) in &solids {
+                    if overlaps(pos.x, next_y, col.w, col.h, sx, sy, sw, sh) {
+                        collided = true;
+                        vel.vy = 0.0;
+                        if step_y > 0.0 {
+                            pos.y = sy - (sh * 0.5) - (col.h * 0.5);
+                        } else {
+                            pos.y = sy + (sh * 0.5) + (col.h * 0.5);
+                        }
+                        break;
+                    }
+                }
+                if collided {
+                    break;
+                }
+                pos.y = next_y;
+            }
+        }
+
         pos.x = pos.x.clamp(0.0, 2000.0);
         pos.y = pos.y.clamp(0.0, 2000.0);
     }

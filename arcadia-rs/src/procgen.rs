@@ -89,8 +89,11 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
     // Spawn internal obstacles procedurally, but avoid the central player spawn area
     let mut spawned = 0;
     while spawned < 2000 {
-        let ox = rng.next_range(100.0, width - 100.0);
-        let oy = rng.next_range(100.0, height - 100.0);
+        // Snap obstacles to a 32x32 grid to avoid pinch-points
+        let grid_x = rng.next_range(3.0, (width / 32.0) - 3.0).floor();
+        let grid_y = rng.next_range(3.0, (height / 32.0) - 3.0).floor();
+        let ox = grid_x * 32.0;
+        let oy = grid_y * 32.0;
 
         // Do not spawn within 100 pixels of the center player spawn
         let dx = ox - (width / 2.0);
