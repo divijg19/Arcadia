@@ -143,6 +143,34 @@ function App() {
 			}
 		});
 
+		// Quick Save / Load Hotkeys
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "F5") {
+				e.preventDefault();
+				if (coreRef) {
+					const bytes = coreRef.save_state();
+					localStorage.setItem(
+						"arcadia_save",
+						btoa(String.fromCharCode.apply(null, bytes as unknown as number[])),
+					);
+					console.log("Quicksaved! Bytes:", bytes.length);
+				}
+			} else if (e.key === "F9") {
+				e.preventDefault();
+				if (coreRef) {
+					const b64 = localStorage.getItem("arcadia_save");
+					if (b64) {
+						const str = atob(b64);
+						const bytes = new Uint8Array(str.length);
+						for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i);
+						const success = coreRef.load_state(bytes);
+						console.log("Quickloaded:", success);
+					}
+				}
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+
 		loop.start();
 	};
 
