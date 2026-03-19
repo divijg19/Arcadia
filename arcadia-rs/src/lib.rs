@@ -4,6 +4,7 @@ use wasm_bindgen::prelude::*;
 mod components;
 #[cfg(test)]
 mod engine_tests;
+pub mod game_logic;
 pub mod procgen;
 pub mod rng;
 mod systems;
@@ -189,19 +190,15 @@ impl ArcadiaCore {
                 }
             }
 
-            // Run collision detection (bullets vs obstacles) and emit events
-            systems::collision_system(&mut self.world, &mut self.event_buffer, &mut self.score);
-
-            // Inspect emitted events and update UI state (e.g., score on BOOM)
-            let mut i = 0usize;
-            while i + 2 < self.event_buffer.len() {
-                let etype = self.event_buffer[i];
-                if (etype - 1.0).abs() < f32::EPSILON {
-                    // BOOM event: increase score
-                    self.score += 10.0;
-                }
-                i += 3;
-            }
+            // Run collision detection (bullets vs obstacles) -> get contact pairs
+            let contacts = systems::collision_system(&mut self.world);
+            // Process game rules (despawns, emit events, modify score)
+            game_logic::process_contacts(
+                &mut self.world,
+                contacts,
+                &mut self.event_buffer,
+                &mut self.score,
+            );
 
             // Run lifetime system to despawn expired entities
             systems::lifetime_system(&mut self.world, self.tick_rate);
