@@ -44,3 +44,22 @@ pub enum Tag {
     Wall,
     Pickup,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct EntitySnapshot {
+    pub pos: Option<Position>,
+    pub vel: Option<Velocity>,
+    pub render: Option<Renderable>,
+    pub collider: Option<Collider>,
+    pub tag: Option<Tag>,
+    pub input_recv: bool,
+    pub lifetime: Option<Lifetime>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WorldSnapshot {
+    pub tick: u32,
+    pub score: f32,
+    pub health: f32,
+    pub entities: Vec<EntitySnapshot>,
+}

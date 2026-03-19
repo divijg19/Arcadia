@@ -288,9 +288,87 @@ impl ArcadiaCore {
 
     #[wasm_bindgen]
     pub fn save_state(&self) -> Vec<u8> {
-        // In v1.0, we will fully serialize the ECS hecs::World.
-        // For now, we prove postcard + serde works by returning a dummy payload.
-        let dummy_data: Vec<u32> = vec![1, 3, 3, 7];
-        postcard::to_allocvec(&dummy_data).unwrap_or_else(|_| vec![])
+        // Build a snapshot containing global state + a serialized view of each entity
+        let mut snapshot = components::WorldSnapshot {
+            tick: self.current_tick,
+            score: self.score,
+            health: self.player_health,
+            entities: Vec::with_capacity(self.world.len() as usize),
+        };
+
+        // Extract components from every entity present in the world. Use Option<&T>
+        // in the query so missing components map to `None` in the snapshot.
+        for (_entity, pos_opt, vel_opt, render_opt, collider_opt, tag_opt, input_opt, life_opt) in
+            self.world
+                .query::<(
+                    hecs::Entity,
+                    Option<&components::Position>,
+                    Option<&components::Velocity>,
+                    Option<&components::Renderable>,
+                    Option<&components::Collider>,
+                    Option<&components::Tag>,
+                    Option<&components::InputReceiver>,
+                    Option<&components::Lifetime>,
+                )>()
+                .iter()
+        {
+            snapshot.entities.push(components::EntitySnapshot {
+                pos: pos_opt.copied(),
+                vel: vel_opt.copied(),
+                render: render_opt.copied(),
+                collider: collider_opt.copied(),
+                tag: tag_opt.copied(),
+                input_recv: input_opt.is_some(),
+                lifetime: life_opt.copied(),
+            });
+        }
+
+        postcard::to_allocvec(&snapshot).unwrap_or_else(|_| vec![])
+    }
+
+    #[wasm_bindgen]
+    pub fn load_state(&mut self, data: &[u8]) -> bool {
+        if let Ok(snapshot) = postcard::from_bytes::<components::WorldSnapshot>(data) {
+            // Clear existing world and tracked entities
+            self.world.clear();
+            self.entities.clear();
+
+            self.current_tick = snapshot.tick;
+            self.score = snapshot.score;
+            self.player_health = snapshot.health;
+
+            // Reconstruct entities from the snapshot
+            for ent_snap in snapshot.entities {
+                let mut builder = hecs::EntityBuilder::new();
+                if let Some(p) = ent_snap.pos {
+                    builder.add(p);
+                }
+                if let Some(v) = ent_snap.vel {
+                    builder.add(v);
+                }
+                if let Some(r) = ent_snap.render {
+                    builder.add(r);
+                }
+                if let Some(c) = ent_snap.collider {
+                    builder.add(c);
+                }
+                if let Some(t) = ent_snap.tag {
+                    builder.add(t);
+                }
+                if let Some(l) = ent_snap.lifetime {
+                    builder.add(l);
+                }
+                if ent_snap.input_recv {
+                    builder.add(components::InputReceiver);
+                }
+
+                let ent = self.world.spawn(builder.build());
+                self.entities.push(ent);
+            }
+
+            true
+        } else {
+            false
+        }
     }
 }

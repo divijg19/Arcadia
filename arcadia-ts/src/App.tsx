@@ -22,6 +22,8 @@ type ArcadiaCoreInstance = {
 	update(dt_ms: number): void;
 	init_world(seed: number): void;
 	get_ui_state(): Float32Array;
+	save_state(): Uint8Array;
+	load_state(data: Uint8Array): boolean;
 };
 
 type WasmModule = {
@@ -149,7 +151,7 @@ function App() {
 			<Show when={scene() === "MENU"}>
 				<div class="menu-screen">
 					<h1>ARCADIA ENGINE</h1>
-					<p>v0.8.0 Prototype</p>
+					<p>v0.9.x Prototype</p>
 					<button type="button" onClick={startGame} class="play-button">
 						START GAME
 					</button>
@@ -159,6 +161,47 @@ function App() {
 			<Show when={scene() === "GAME"}>
 				<canvas id="game-canvas" width="800" height="600"></canvas>
 				<div class="tick-counter">Ticks: {tickCount()}</div>
+				<div class="save-controls">
+					<button
+						type="button"
+						onClick={() => {
+							if (core) {
+								const bytes = core.save_state();
+								localStorage.setItem(
+									"arcadia_save",
+									btoa(
+										String.fromCharCode.apply(
+											null,
+											bytes as unknown as number[],
+										),
+									),
+								);
+								console.log("Game Saved! Bytes:", bytes.length);
+							}
+						}}
+					>
+						Save State
+					</button>
+
+					<button
+						type="button"
+						onClick={() => {
+							if (core) {
+								const b64 = localStorage.getItem("arcadia_save");
+								if (b64) {
+									const str = atob(b64);
+									const bytes = new Uint8Array(str.length);
+									for (let i = 0; i < str.length; i++)
+										bytes[i] = str.charCodeAt(i);
+									const success = core.load_state(bytes);
+									console.log("State Loaded:", success);
+								}
+							}
+						}}
+					>
+						Load State
+					</button>
+				</div>
 				<div class="score-counter">Score: {score()}</div>
 			</Show>
 		</div>
