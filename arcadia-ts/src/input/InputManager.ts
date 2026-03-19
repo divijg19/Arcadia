@@ -63,7 +63,9 @@ export class InputManager {
 	};
 
 	private onMouseDown = (e: MouseEvent) => {
-		if (e.button === 0) this.mouseDown = true;
+		if (e.button === 0 && (e.target as HTMLElement).tagName === "CANVAS") {
+			this.mouseDown = true;
+		}
 	};
 
 	private onMouseUp = (e: MouseEvent) => {

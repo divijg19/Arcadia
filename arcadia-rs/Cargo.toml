@@ -1,7 +1,7 @@
 [package]
 name = "arcadia-rs"
-version = "0.9.0"
-description = "Arcadia's Rust library for WebAssembly"
+version = "0.9.1"
+description = "Rust runtime for Arcadia, a browser game engine for WebAssembly."
 repository = "https://github.com/divijg19/arcadia/arcadia-rs"
 edition = "2024"
 

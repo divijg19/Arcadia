@@ -2,33 +2,10 @@ import {
 	Application,
 	Container,
 	Graphics,
+	Rectangle,
 	Sprite,
-	Spritesheet,
 	Texture,
 } from "pixi.js";
-
-// Minimal type for a JSON texture atlas (only the fields we use)
-type AtlasData = {
-	frames: Record<
-		string,
-		{
-			frame: { x: number; y: number; w: number; h: number };
-			rotated?: boolean;
-			trimmed?: boolean;
-			spriteSourceSize?: { x: number; y: number; w: number; h: number };
-			sourceSize?: { w: number; h: number };
-			pivot?: { x: number; y: number };
-		}
-	>;
-	meta: {
-		scale: string | number;
-		size?: { w: number; h: number };
-		image?: string;
-		app?: string;
-		format?: string;
-		version?: string;
-	};
-};
 
 type PixiAsyncApp = Application & {
 	init?: (opts: {
@@ -36,6 +13,7 @@ type PixiAsyncApp = Application & {
 		width: number;
 		height: number;
 		backgroundColor: number;
+		premultipliedAlpha?: boolean;
 	}) => Promise<void>;
 };
 
@@ -43,7 +21,7 @@ type PixiTaggedSprite = Sprite & { _arcadiaSpriteId?: number };
 
 export class Renderer {
 	app: Application | null = null;
-	private sheet: Spritesheet | null = null;
+	private textures: Record<string, Texture> = {};
 	private spriteMap: string[] = [
 		"player",
 		"bullet",
@@ -52,89 +30,132 @@ export class Renderer {
 		"pickup",
 	];
 	private worldContainer: Container = new Container();
-	private spritePool: Array<Sprite | undefined> = [];
+	private spritePool: Array<PixiTaggedSprite | undefined> = [];
 
 	async init(canvas: HTMLCanvasElement) {
 		try {
-			// Prefer a two-step init if available (some builds expose an async init), otherwise construct with view.
-			// Create an Application instance and initialize it via the async `init()` API
-			// (constructor options are deprecated since Pixi v8).
 			const app = new Application() as PixiAsyncApp;
 			this.app = app;
+
+			// Explicitly disable preferences that cause WebGL warnings on raw data uploads
 			if (typeof app.init === "function") {
 				await app.init({
 					canvas: canvas,
 					width: 800,
 					height: 600,
 					backgroundColor: 0x1a1a1a,
+					premultipliedAlpha: false,
 				});
 			} else {
-				// As a very small compatibility fallback, set up the stage renderer manually
-				// (this path is unlikely on modern Pixi builds).
 				this.app = new Application({
-					canvas: canvas,
+					view: canvas,
 					width: 800,
 					height: 600,
 					backgroundColor: 0x1a1a1a,
+					premultipliedAlpha: false,
 				});
 			}
 
-			// Add the world container to the stage so camera transforms apply to everything in-world
 			this.app?.stage?.addChild(this.worldContainer);
 
-			// Simulate a single spritesheet atlas containing all frames side-by-side
 			if (this.app) {
+				// 1. Generate the master Atlas Graphic
 				const g = new Graphics();
 
-				// Draw shapes into a 160x32 atlas layout (5 tiles of 32x32)
-				// "player" at (16,16)
-				g.clear();
-				g.circle(16, 16, 16);
-				g.fill(0x3498db);
+				// "player" at (16, 16)
+				g.beginFill(0x3498db);
+				g.drawCircle(16, 16, 16);
+				g.endFill();
 
-				// "bullet" at (48,16) - 8x8 centered -> (44, 12, 8, 8)
-				g.rect(44, 12, 8, 8);
-				g.fill(0xf1c40f);
+				// "bullet" at (48, 16) -> (44, 12, 8, 8)
+				g.beginFill(0xf1c40f);
+				g.drawRect(44, 12, 8, 8);
+				g.endFill();
 
-				// "obstacle" at (80,16) - 32x32 centered -> (64, 0, 32, 32)
-				g.rect(64, 0, 32, 32);
-				g.fill(0xe74c3c);
+				// "obstacle" at (80, 16) -> (64, 0, 32, 32)
+				g.beginFill(0xe74c3c);
+				g.drawRect(64, 0, 32, 32);
+				g.endFill();
 
-				// "wall" at (112,16) - 32x32 centered -> (96, 0, 32, 32)
-				g.rect(96, 0, 32, 32);
-				g.fill(0x7f8c8d);
-				g.stroke({ width: 2, color: 0x000000 });
+				// "wall" at (112, 16) -> (96, 0, 32, 32)
+				g.beginFill(0x7f8c8d);
+				g.drawRect(96, 0, 32, 32);
+				g.endFill();
+				g.lineStyle(2, 0x000000);
+				g.drawRect(96, 0, 32, 32);
 
-				// "pickup" at (144,16) - 16x16 centered -> (136, 8, 16, 16)
-				// Draw a small green square to represent a collectible
-				g.rect(136, 8, 16, 16);
-				g.fill(0x2ecc71);
+				// "pickup" at (144, 16) -> (136, 8, 16, 16)
+				g.beginFill(0x2ecc71);
+				g.drawRect(136, 8, 16, 16);
+				g.endFill();
 
-				// Generate a single texture that contains all frames
-				const atlasTexture = this.app.renderer.generateTexture(g);
-				const baseTexture = atlasTexture.baseTexture;
+				// Render the atlas into a DOM canvas to ensure a DOM-backed
+				// upload (avoids ImageBitmap/non-DOM texImage deprecation warnings).
+				const atlasCanvas = (
+					this.app.renderer.extract as unknown as {
+						canvas: (displayObject: unknown) => HTMLCanvasElement;
+					}
+				).canvas(g);
 
-				// Define a minimal atlas JSON describing frame rectangles (typed)
-				const atlasData: AtlasData = {
-					frames: {
-						player: { frame: { x: 0, y: 0, w: 32, h: 32 } },
-						bullet: { frame: { x: 32, y: 0, w: 32, h: 32 } },
-						obstacle: { frame: { x: 64, y: 0, w: 32, h: 32 } },
-						wall: { frame: { x: 96, y: 0, w: 32, h: 32 } },
-						pickup: { frame: { x: 128, y: 0, w: 32, h: 32 } },
-					},
-					meta: { scale: "1" },
-				};
+				// Create a Texture from the DOM-canvas atlas. Use an `any` cast to
+				// satisfy the typing for Texture.from and obtain a Pixi TextureSource
+				// which we can re-use for frame-backed textures.
+				const masterTex = Texture.from(atlasCanvas);
+				const masterSource = masterTex.source;
 
-				// Parse into a Spritesheet so frames can be addressed by name
-				this.sheet = new Spritesheet(baseTexture, atlasData);
-				await this.sheet.parse();
+				// 2. Define individual Texture Frames directly from the master source
+				this.textures.player = new Texture({
+					source: masterSource,
+					frame: new Rectangle(0, 0, 32, 32),
+				});
+				this.textures.bullet = new Texture({
+					source: masterSource,
+					frame: new Rectangle(32, 0, 32, 32),
+				});
+				this.textures.obstacle = new Texture({
+					source: masterSource,
+					frame: new Rectangle(64, 0, 32, 32),
+				});
+				this.textures.wall = new Texture({
+					source: masterSource,
+					frame: new Rectangle(96, 0, 32, 32),
+				});
+				this.textures.pickup = new Texture({
+					source: masterSource,
+					frame: new Rectangle(128, 0, 32, 32),
+				});
+
+				// 3. Force GPU upload to prevent lazy initialization warnings by
+				// initializing each texture's source via the renderer texture system.
+				try {
+					const rendererLike = this.app.renderer as unknown as
+						| { texture?: { init?: (s: unknown) => void } }
+						| undefined;
+					if (
+						rendererLike?.texture &&
+						typeof rendererLike.texture.init === "function"
+					) {
+						const texs = [
+							this.textures.player,
+							this.textures.bullet,
+							this.textures.obstacle,
+							this.textures.wall,
+							this.textures.pickup,
+						];
+						for (const t of texs) {
+							const src = t.source ?? masterSource;
+							try {
+								if (src) rendererLike.texture.init(src);
+							} catch {
+								/* ignore per-texture failures */
+							}
+						}
+					}
+				} catch {
+					// ignore
+				}
 			}
-
-			// Start with an empty pool; sprites will be allocated lazily by getOrCreateSprite
 		} catch (err) {
-			// Log and rethrow so callers can surface the error in the browser console
-			// eslint-disable-next-line no-console
 			console.error("Renderer.init error", err);
 			throw err;
 		}
@@ -143,42 +164,30 @@ export class Renderer {
 	private getOrCreateSprite(index: number, spriteId: number): PixiTaggedSprite {
 		const idx = Math.trunc(index);
 
-		// If a sprite already exists at this ID, check if it matches the requested spriteId
 		if (this.spritePool[idx]) {
 			const existing = this.spritePool[idx] as PixiTaggedSprite;
 			if (existing._arcadiaSpriteId === spriteId) {
 				return existing;
 			} else {
-				// Different visual requested; destroy and remove the old one
 				try {
-					existing.destroy({ children: true, texture: true });
+					existing.destroy({ children: true, texture: false });
 				} catch {
-					// ignore
+					/* ignore */
 				}
 				delete this.spritePool[idx];
 			}
 		}
 
-		// Create a new Sprite from the spritesheet frame (by name) or fall back to `Texture.WHITE`
-		let tex = Texture.WHITE;
-		if (this.sheet) {
-			const idx = Math.trunc(spriteId);
-			const frameName = this.spriteMap[idx];
-			if (frameName && this.sheet.textures[frameName]) {
-				tex = this.sheet.textures[frameName];
-			}
-		}
+		const frameName = this.spriteMap[Math.trunc(spriteId)] || this.spriteMap[0];
+		const tex = this.textures[frameName] || Texture.WHITE;
+
 		const s = new Sprite(tex) as PixiTaggedSprite;
 		s.anchor.set(0.5);
-
-		// Add the sprite to the world container so camera transforms apply
 		this.worldContainer.addChild(s);
 
-		// tag the sprite with its arcadia sprite id for future type checks
 		s._arcadiaSpriteId = spriteId;
-
-		// Place sprite at the exact ID index (sparse array allowed)
 		this.spritePool[idx] = s;
+
 		return s;
 	}
 
