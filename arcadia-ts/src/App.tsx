@@ -11,6 +11,9 @@ function App() {
 
 	const engine = new ArcadiaEngine();
 
+	// Track spawned player entity id so TS can apply velocities via FFI
+	let playerId: number | null = null;
+
 	// Simple deterministic PRNG (Mulberry32) used to replace Rust procgen
 	function mulberry32(a: number) {
 		let s = a >>> 0;
@@ -87,6 +90,19 @@ function App() {
 		engine.onTick = (ticks) => {
 			setTickCount(ticks);
 
+			// Player Movement Logic (5.0 pixels per tick)
+			if (playerId !== null) {
+				const mask = engine.input.getMask();
+				let vx = 0;
+				let vy = 0;
+				if ((mask & 1) !== 0) vy = -5.0; // UP
+				if ((mask & 2) !== 0) vy = 5.0; // DOWN
+				if ((mask & 4) !== 0) vx = -5.0; // LEFT
+				if ((mask & 8) !== 0) vx = 5.0; // RIGHT
+
+				engine.core.set_velocity(playerId, vx, vy);
+			}
+
 			// Temporary TS Firing Logic (v1.0.1): handle mouse firing client-side
 			if (fireCooldown > 0) fireCooldown -= 1000 / 60;
 			if (engine.input.isMouseDown() && fireCooldown <= 0) {
@@ -155,7 +171,7 @@ function App() {
 		const height = 2000;
 
 		// 1. Spawn Player (Tag: 0, Layer: 1, Mask: 2)
-		engine.core.spawn(
+		playerId = engine.core.spawn(
 			width / 2,
 			height / 2,
 			0,

@@ -14,10 +14,6 @@ pub struct Velocity {
     pub vy: f32,
 }
 
-// Tag component to mark the player-controlled entity
-#[derive(Serialize, Deserialize, Clone, Copy)]
-pub struct InputReceiver;
-
 #[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Renderable {
     pub sprite_id: f32,

@@ -48,8 +48,6 @@ export class ArcadiaEngine {
 	}
 
 	private tick(dt_ms: number) {
-		// Inputs
-		this.core.apply_input(this.input.getMask());
 		this.core.apply_mouse(
 			this.input.getMouseX(),
 			this.input.getMouseY(),
