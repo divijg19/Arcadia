@@ -42,9 +42,8 @@ export class ArcadiaEngine {
 		this.loop = new GameLoop((dt) => this.tick(dt));
 	}
 
-	start(seed: number) {
+	start() {
 		this.audio.init();
-		this.core.init_world(seed);
 		this.loop.start();
 	}
 

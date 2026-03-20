@@ -12,7 +12,20 @@ export type ArcadiaCoreInstance = {
 	apply_mouse(x: number, y: number, is_down: boolean): void;
 	apply_despawns(ids: Float32Array): void;
 	update(dt_ms: number): void;
-	init_world(seed: number): void;
+	spawn(
+		x: number,
+		y: number,
+		vx: number,
+		vy: number,
+		w: number,
+		h: number,
+		is_sensor: boolean,
+		layer: number,
+		mask: number,
+		sprite_id: number,
+		tag_id: number,
+		lifetime_ms: number,
+	): number;
 	save_state(): Uint8Array;
 	load_state(data: Uint8Array): boolean;
 };

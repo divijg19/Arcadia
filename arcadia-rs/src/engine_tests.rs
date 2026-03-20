@@ -15,29 +15,43 @@ mod tests {
     }
 
     #[test]
-    fn test_procgen_entity_counts() {
-        let mut core = ArcadiaCore::new();
-        core.init_world(42);
-
-        // Count internal obstacles
-        let mut obstacle_count = 0;
-        for tag in core.world.query::<&Tag>().iter() {
-            if *tag == Tag::Obstacle {
-                obstacle_count += 1;
-            }
-        }
-        // Exactly 2000 obstacles should be spawned by procgen
-        assert_eq!(obstacle_count, 2000);
-    }
-
-    #[test]
     fn test_bullet_vs_obstacle_destruction() {
         let mut core = ArcadiaCore::new();
         // Spawn Player to act as the camera anchor (avoids panic)
-        core.spawn_entity(100.0, 100.0);
+        let player_ent = core.world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
+            },
+            Tag::Player,
+        ));
+        core.entities.push(player_ent);
 
-        // Spawn a bullet at (200, 200) moving right
-        core.spawn_bullet(200.0, 200.0, 10.0, 0.0);
+        // Spawn a bullet at (200, 200) moving right (use world.spawn directly)
+        let bullet_ent = core.world.spawn((
+            Position { x: 200.0, y: 200.0 },
+            Velocity { vx: 10.0, vy: 0.0 },
+            crate::components::Renderable {
+                sprite_id: 1.0,
+                rotation: 0.0,
+            },
+            crate::components::Collider {
+                w: 8.0,
+                h: 8.0,
+                is_sensor: false,
+                layer: 4, // LAYER_BULLET
+                mask: 0,
+            },
+            Tag::Bullet,
+            crate::components::Lifetime {
+                remaining_ms: 2000.0,
+            },
+        ));
+        core.entities.push(bullet_ent);
 
         // Manually spawn an obstacle directly in front of it at (215, 200)
         let obstacle_ent = core.world.spawn((
@@ -137,27 +151,6 @@ mod tests {
             player_pos.x, 100.0,
             "Player should be snapped flush against the wall"
         );
-    }
-
-    #[test]
-    fn test_procgen_clear_spawn_zone() {
-        let mut core = ArcadiaCore::new();
-        core.init_world(42);
-
-        let center_x = 1000.0;
-        let center_y = 1000.0;
-
-        for (pos, tag) in core.world.query::<(&Position, &Tag)>().iter() {
-            if *tag == Tag::Obstacle {
-                let dx = pos.x - center_x;
-                let dy = pos.y - center_y;
-                let dist = (dx * dx + dy * dy).sqrt();
-                assert!(
-                    dist >= 100.0,
-                    "Obstacle spawned inside the player clear zone!"
-                );
-            }
-        }
     }
 
     #[test]
