@@ -25,6 +25,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
             w: 32.0,
             h: 32.0,
             is_sensor: false,
+            layer: 1, // LAYER_PLAYER
+            mask: 2,
         },
         Tag::Player,
     ));
@@ -44,6 +46,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -60,6 +64,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -82,6 +88,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -98,6 +106,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -133,6 +143,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Obstacle,
         ));
@@ -155,6 +167,8 @@ pub fn generate_arena(world: &mut World, seed: u64, width: f32, height: f32) -> 
                 w: 16.0,
                 h: 16.0,
                 is_sensor: true,
+                layer: 8, // LAYER_PICKUP
+                mask: 0,
             },
             Tag::Pickup,
         ));

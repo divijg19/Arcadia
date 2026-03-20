@@ -34,6 +34,8 @@ pub struct Collider {
     pub w: f32,
     pub h: f32,
     pub is_sensor: bool,
+    pub layer: u8,
+    pub mask: u8,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]

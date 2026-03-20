@@ -46,6 +46,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Obstacle,
         ));
@@ -76,6 +78,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             Tag::Player,
         ));
@@ -88,6 +92,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -136,6 +142,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             Tag::Player,
         ));
@@ -149,6 +157,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -174,6 +184,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             Tag::Player,
         ));
@@ -186,6 +198,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -209,6 +223,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             Tag::Player,
         ));
@@ -221,6 +237,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 2, // LAYER_SOLID
+                mask: 1,
             },
             Tag::Wall,
         ));
@@ -250,6 +268,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             Tag::Player,
         ));
@@ -262,6 +282,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: true,
+                layer: 8, // LAYER_PICKUP
+                mask: 0,
             },
             Tag::Pickup,
         ));
@@ -285,6 +307,8 @@ mod tests {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             Tag::Player,
         ));
@@ -296,6 +320,8 @@ mod tests {
                 w: 16.0,
                 h: 16.0,
                 is_sensor: true,
+                layer: 8, // LAYER_PICKUP
+                mask: 0,
             },
             Tag::Pickup,
         ));
@@ -368,6 +394,153 @@ mod tests {
             y1,
             y2,
             y3
+        );
+    }
+
+    #[test]
+    fn test_mask_zero_ignores_solids() {
+        let mut world = hecs::World::new();
+
+        // Entity (e.g., Ghost/Bullet) moving Right at 20px/frame, Mask = 0
+        let ghost = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            Velocity { vx: 20.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 4,
+                mask: 0,
+            },
+            Tag::Bullet,
+        ));
+
+        // Solid Wall directly in the path (Layer = 2)
+        world.spawn((
+            Position { x: 120.0, y: 100.0 },
+            Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 2,
+                mask: 1,
+            },
+            Tag::Wall,
+        ));
+
+        crate::systems::movement_system(&mut world);
+
+        let pos = world.query_one_mut::<&Position>(ghost).unwrap();
+        // Because mask is 0, the sweep should completely ignore the wall.
+        assert_eq!(
+            pos.x, 120.0,
+            "Ghost was blocked by a wall despite having mask 0!"
+        );
+    }
+
+    #[test]
+    fn test_custom_layer_blocking() {
+        let mut world = hecs::World::new();
+
+        // Entity moving Right. Mask = 16 (Only collides with Layer 16)
+        let mover = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            Velocity { vx: 20.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 1,
+                mask: 16,
+            },
+            Tag::Player,
+        ));
+
+        // Standard Wall (Layer = 2). Should NOT block.
+        world.spawn((
+            Position { x: 120.0, y: 100.0 },
+            Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 2,
+                mask: 1,
+            },
+            Tag::Wall,
+        ));
+
+        // Magic Door (Layer = 16). SHOULD block.
+        world.spawn((
+            Position { x: 140.0, y: 100.0 },
+            Velocity { vx: 0.0, vy: 0.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 16,
+                mask: 1,
+            },
+            Tag::Wall,
+        ));
+
+        crate::systems::movement_system(&mut world);
+
+        let pos = world.query_one_mut::<&Position>(mover).unwrap();
+        // The standard wall (Layer 2) is ignored.
+        // The magic door (Layer 16) blocks the mover.
+        // Door Left Edge = 140 - 16 = 124. Mover Right Edge = x + 16. Flush X = 108.0
+        assert_eq!(
+            pos.x, 108.0,
+            "Entity did not respect the custom layer mask!"
+        );
+    }
+
+    #[test]
+    fn test_bullet_overlap_contact_generation() {
+        let mut world = hecs::World::new();
+
+        // Bullet at (100, 100) (Layer 4, Mask 0)
+        let bullet = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Collider {
+                w: 8.0,
+                h: 8.0,
+                is_sensor: false,
+                layer: 4,
+                mask: 0,
+            },
+            Tag::Bullet,
+        ));
+
+        // Obstacle directly on top of it at (100, 100) (Layer 2, Mask 1)
+        let obstacle = world.spawn((
+            Position { x: 100.0, y: 100.0 },
+            crate::components::Collider {
+                w: 32.0,
+                h: 32.0,
+                is_sensor: false,
+                layer: 2,
+                mask: 1,
+            },
+            Tag::Obstacle,
+        ));
+
+        // Run the generic collision system
+        let contacts = crate::systems::collision_system(&mut world);
+
+        // Ensure exactly one contact pair was generated
+        assert_eq!(
+            contacts.len(),
+            1,
+            "Collision system failed to generate a contact pair!"
+        );
+
+        // The pair order is sorted by entity ID, so we just check if both exist in the tuple
+        let pair = contacts[0];
+        assert!(
+            (pair.0 == bullet && pair.1 == obstacle) || (pair.0 == obstacle && pair.1 == bullet)
         );
     }
 }

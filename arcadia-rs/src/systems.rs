@@ -41,93 +41,90 @@ pub fn apply_input_system(world: &mut World, input_mask: u8) {
 
 // Axis-separated swept movement with sensor handling.
 pub fn movement_system(world: &mut World) {
-    // Build a static list of solids (non-sensor colliders) to test against.
-    let mut solids: Vec<(hecs::Entity, f32, f32, f32, f32)> = Vec::new();
-    for (ent, pos, col) in world
-        .query::<(hecs::Entity, &components::Position, &components::Collider)>()
+    // Collect all solids (non-sensor) along with their layers
+    let mut solids: Vec<(f32, f32, f32, f32, u8)> = Vec::new();
+    for (_e, pos, col, tag) in world
+        .query::<(
+            hecs::Entity,
+            &components::Position,
+            &components::Collider,
+            &components::Tag,
+        )>()
         .iter()
     {
         if !col.is_sensor {
-            solids.push((ent, pos.x, pos.y, col.w, col.h));
+            // Only treat Walls and Obstacles as solids for pushout
+            if *tag == components::Tag::Wall || *tag == components::Tag::Obstacle {
+                solids.push((pos.x, pos.y, col.w, col.h, col.layer));
+            }
         }
     }
 
-    // Iterate mutable over movers (entities with Position + Velocity + Collider)
-    for (entity, pos, vel, col) in world.query_mut::<(
+    // overlap test helper
+    let overlaps = |x1: f32, y1: f32, w1: f32, h1: f32, x2: f32, y2: f32, w2: f32, h2: f32| {
+        let dx = (x1 - x2).abs();
+        let dy = (y1 - y2).abs();
+        dx < ((w1 * 0.5) + (w2 * 0.5)) && dy < ((h1 * 0.5) + (h2 * 0.5))
+    };
+
+    // Iterate movers (any entity with Position + Velocity + Collider)
+    for (_ent, pos, vel, col) in world.query_mut::<(
         hecs::Entity,
         &mut components::Position,
-        &components::Velocity,
+        &mut components::Velocity,
         &components::Collider,
     )>() {
-        // X axis
-        let start_x = pos.x;
-        let mut best_new_x = start_x + vel.vx;
-
+        // --- X axis sweep with stepping ---
         if vel.vx != 0.0 {
-            for (s_ent, sx, sy, sw, sh) in solids.iter() {
-                if *s_ent == entity {
-                    continue;
-                }
-                // Only consider solids that vertically overlap the mover
-                let vertical_overlap = (pos.y - sy).abs() < ((col.h * 0.5) + (sh * 0.5));
-                if !vertical_overlap {
-                    continue;
-                }
+            let steps = vel.vx.abs().ceil() as i32;
+            let step_x = vel.vx / (steps as f32);
 
-                let sum_half = (col.w * 0.5) + (sw * 0.5);
-                // Moving right
-                if vel.vx > 0.0 && start_x < *sx {
-                    let candidate = sx - sum_half;
-                    if candidate >= start_x && candidate <= best_new_x {
-                        best_new_x = candidate;
+            for _ in 0..steps {
+                let next_x = pos.x + step_x;
+                let mut collided = false;
+                for &(sx, sy, sw, sh, s_layer) in &solids {
+                    // Only apply solid pushout when mover's mask intersects the solid's layer
+                    if (col.mask & s_layer) != 0
+                        && overlaps(next_x, pos.y, col.w, col.h, sx, sy, sw, sh)
+                    {
+                        collided = true;
+                        vel.vx = 0.0;
+                        break;
                     }
                 }
-                // Moving left
-                if vel.vx < 0.0 && start_x > *sx {
-                    let candidate = sx + sum_half;
-                    if candidate <= start_x && candidate >= best_new_x {
-                        best_new_x = candidate;
-                    }
+                if collided {
+                    break;
                 }
+                pos.x = next_x;
             }
         }
 
-        pos.x = best_new_x.clamp(0.0, 2000.0);
-
-        // Y axis (use updated X for horizontal overlap checks)
-        let start_y = pos.y;
-        let mut best_new_y = start_y + vel.vy;
-
+        // --- Y axis sweep with stepping ---
         if vel.vy != 0.0 {
-            for (s_ent, sx, sy, sw, sh) in solids.iter() {
-                if *s_ent == entity {
-                    continue;
-                }
-                // Only consider solids that horizontally overlap the mover
-                let horizontal_overlap = (pos.x - sx).abs() < ((col.w * 0.5) + (sw * 0.5));
-                if !horizontal_overlap {
-                    continue;
-                }
+            let steps = vel.vy.abs().ceil() as i32;
+            let step_y = vel.vy / (steps as f32);
 
-                let sum_half = (col.h * 0.5) + (sh * 0.5);
-                // Moving down
-                if vel.vy > 0.0 && start_y < *sy {
-                    let candidate = sy - sum_half;
-                    if candidate >= start_y && candidate <= best_new_y {
-                        best_new_y = candidate;
+            for _ in 0..steps {
+                let next_y = pos.y + step_y;
+                let mut collided = false;
+                for &(sx, sy, sw, sh, s_layer) in &solids {
+                    if (col.mask & s_layer) != 0
+                        && overlaps(pos.x, next_y, col.w, col.h, sx, sy, sw, sh)
+                    {
+                        collided = true;
+                        vel.vy = 0.0;
+                        break;
                     }
                 }
-                // Moving up
-                if vel.vy < 0.0 && start_y > *sy {
-                    let candidate = sy + sum_half;
-                    if candidate <= start_y && candidate >= best_new_y {
-                        best_new_y = candidate;
-                    }
+                if collided {
+                    break;
                 }
+                pos.y = next_y;
             }
         }
 
-        pos.y = best_new_y.clamp(0.0, 2000.0);
+        pos.x = pos.x.clamp(0.0, 2000.0);
+        pos.y = pos.y.clamp(0.0, 2000.0);
     }
 }
 
