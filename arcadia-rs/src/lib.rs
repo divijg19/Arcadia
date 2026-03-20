@@ -73,6 +73,8 @@ impl ArcadiaCore {
                 w: 8.0,
                 h: 8.0,
                 is_sensor: false,
+                layer: 4, // LAYER_BULLET
+                mask: 0,
             },
             components::Tag::Bullet,
             components::Lifetime {
@@ -96,6 +98,8 @@ impl ArcadiaCore {
                 w: 32.0,
                 h: 32.0,
                 is_sensor: false,
+                layer: 1, // LAYER_PLAYER
+                mask: 2,
             },
             components::InputReceiver,
             components::Tag::Player,
