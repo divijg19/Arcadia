@@ -125,7 +125,7 @@ function App() {
 					if (isBulletObstacle) {
 						toDespawn.add(Math.trunc(aIdF));
 						toDespawn.add(Math.trunc(bIdF));
-						audio.playExplosion();
+						audio.playSound(1);
 						deltaScore += 10;
 						continue;
 					}
@@ -137,7 +137,7 @@ function App() {
 					if (isBulletWall) {
 						const bulletId = Math.trunc(aTag === TAG_BULLET ? aIdF : bIdF);
 						toDespawn.add(bulletId);
-						audio.playPing();
+						audio.playSound(2);
 						continue;
 					}
 
@@ -148,7 +148,7 @@ function App() {
 					if (isPlayerPickup) {
 						const pickupId = Math.trunc(aTag === TAG_PICKUP ? aIdF : bIdF);
 						toDespawn.add(pickupId);
-						audio.playPing();
+						audio.playSound(2);
 						deltaScore += 50;
 					}
 				}
