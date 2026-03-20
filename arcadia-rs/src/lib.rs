@@ -4,7 +4,6 @@ use wasm_bindgen::prelude::*;
 mod components;
 #[cfg(test)]
 mod engine_tests;
-pub mod procgen;
 pub mod rng;
 mod systems;
 
@@ -22,7 +21,6 @@ pub struct ArcadiaCore {
     mouse_x: f32,
     mouse_y: f32,
     is_mouse_down: bool,
-    fire_cooldown: f64,
     contact_buffer: Vec<f32>,
     player_health: f32,
     score: f32,
@@ -51,60 +49,74 @@ impl ArcadiaCore {
             mouse_x: 0.0,
             mouse_y: 0.0,
             is_mouse_down: false,
-            fire_cooldown: 0.0,
+
             contact_buffer: Vec::new(),
             player_health: 100.0,
             score: 0.0,
         }
     }
 
-    // `spawn_entity` removed in favor of deterministic procedural generation (init_world)
+    // Generic spawn function exposed to WASM/JS. This replaces the previous
+    // higher-level helpers like `spawn_bullet`/`spawn_entity` and moves all
+    // procedural level generation into the embedding (TypeScript).
+    #[allow(clippy::too_many_arguments)]
+    #[wasm_bindgen]
+    pub fn spawn(
+        &mut self,
+        x: f32,
+        y: f32,
+        vx: f32,
+        vy: f32,
+        w: f32,
+        h: f32,
+        is_sensor: bool,
+        layer: u8,
+        mask: u8,
+        sprite_id: f32,
+        tag_id: u8,
+        lifetime_ms: f64,
+    ) -> u32 {
+        let tag = match tag_id {
+            0 => components::Tag::Player,
+            1 => components::Tag::Obstacle,
+            2 => components::Tag::Bullet,
+            3 => components::Tag::Wall,
+            4 => components::Tag::Pickup,
+            _ => components::Tag::Obstacle,
+        };
 
-    pub fn spawn_bullet(&mut self, x: f32, y: f32, vx: f32, vy: f32) {
-        let ent = self.world.spawn((
-            components::Position { x, y },
-            components::Velocity { vx, vy },
-            components::Renderable {
-                sprite_id: 1.0,
-                rotation: 0.0,
-            },
-            components::Collider {
-                w: 8.0,
-                h: 8.0,
-                is_sensor: false,
-                layer: 4, // LAYER_BULLET
-                mask: 0,
-            },
-            components::Tag::Bullet,
-            components::Lifetime {
-                remaining_ms: 2000.0,
-            },
-        ));
+        let mut builder = hecs::EntityBuilder::new();
+        builder.add(components::Position { x, y });
+        builder.add(components::Velocity { vx, vy });
+        builder.add(components::Renderable {
+            sprite_id,
+            rotation: 0.0,
+        });
+        builder.add(components::Collider {
+            w,
+            h,
+            is_sensor,
+            layer,
+            mask,
+        });
+        builder.add(tag);
 
+        // Temporary: We still rely on InputReceiver for the movement system.
+        // This will be removed in v1.0.2.
+        if tag == components::Tag::Player {
+            builder.add(components::InputReceiver);
+        }
+
+        if lifetime_ms > 0.0 {
+            builder.add(components::Lifetime {
+                remaining_ms: lifetime_ms,
+            });
+        }
+
+        let ent = self.world.spawn(builder.build());
         self.entities.push(ent);
-    }
 
-    // Helper used by tests: spawn a simple player entity (not exported to WASM)
-    #[cfg(test)]
-    fn spawn_entity(&mut self, x: f32, y: f32) -> hecs::Entity {
-        let ent = self.world.spawn((
-            components::Position { x, y },
-            components::Renderable {
-                sprite_id: 0.0,
-                rotation: 0.0,
-            },
-            components::Collider {
-                w: 32.0,
-                h: 32.0,
-                is_sensor: false,
-                layer: 1, // LAYER_PLAYER
-                mask: 2,
-            },
-            components::InputReceiver,
-            components::Tag::Player,
-        ));
-        self.entities.push(ent);
-        ent
+        ent.id()
     }
 
     #[wasm_bindgen]
@@ -112,15 +124,6 @@ impl ArcadiaCore {
         self.mouse_x = x;
         self.mouse_y = y;
         self.is_mouse_down = is_down;
-    }
-
-    #[wasm_bindgen]
-    pub fn init_world(&mut self, seed: u32) {
-        // Procedurally generate a deterministic world and capture the spawned entity list
-        self.entities = procgen::generate_arena(&mut self.world, seed as u64, 2000.0, 2000.0);
-        // Reset camera to origin; the first update() will center on the player
-        self.camera_x = 0.0;
-        self.camera_y = 0.0;
     }
 
     #[wasm_bindgen]
@@ -134,46 +137,8 @@ impl ArcadiaCore {
             // Fixed-timestep tick
             self.current_tick = self.current_tick.wrapping_add(1);
 
-            // Decrease firing cooldown (ms)
-            if self.fire_cooldown > 0.0 {
-                self.fire_cooldown -= self.tick_rate;
-                if self.fire_cooldown < 0.0 {
-                    self.fire_cooldown = 0.0;
-                }
-            }
-
             // Run ECS systems
             systems::apply_input_system(&mut self.world, self.player_input);
-
-            // Shooting / aiming: if mouse is down and cooldown expired, spawn a bullet towards world mouse
-            if self.is_mouse_down && self.fire_cooldown <= 0.0 {
-                let mut player_pos: Option<(f32, f32)> = None;
-                for (pos, tag) in self
-                    .world
-                    .query::<(&components::Position, &components::Tag)>()
-                    .iter()
-                {
-                    if *tag == components::Tag::Player {
-                        player_pos = Some((pos.x, pos.y));
-                        break;
-                    }
-                }
-
-                if let Some((px, py)) = player_pos {
-                    let world_mx = self.mouse_x + self.camera_x;
-                    let world_my = self.mouse_y + self.camera_y;
-                    let dx = world_mx - px;
-                    let dy = world_my - py;
-                    let len = (dx * dx + dy * dy).sqrt();
-
-                    if len > 0.0 {
-                        let vx = (dx / len) * 15.0; // Bullet speed
-                        let vy = (dy / len) * 15.0;
-                        self.spawn_bullet(px, py, vx, vy);
-                        self.fire_cooldown = 150.0; // Shoot every 150ms
-                    }
-                }
-            }
 
             systems::movement_system(&mut self.world);
 
