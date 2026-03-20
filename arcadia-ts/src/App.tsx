@@ -16,9 +16,9 @@ type ArcadiaCoreInstance = {
 	get_camera_y(): number;
 	apply_input(mask: number): void;
 	apply_mouse(x: number, y: number, is_down: boolean): void;
-	get_event_buffer_ptr(): number;
-	get_event_buffer_len(): number;
-	clear_events(): void;
+	get_contact_buffer_ptr(): number;
+	get_contact_buffer_len(): number;
+	apply_despawns(ids: Float32Array): void;
 	update(dt_ms: number): void;
 	init_world(seed: number): void;
 	get_ui_state(): Float32Array;
@@ -85,6 +85,12 @@ function App() {
 
 		// 5. Start the Game Loop
 		let memoryView: Float32Array | null = null;
+		// Tag constants mirror Rust `components::Tag` discriminants
+		const TAG_PLAYER = 0;
+		const TAG_OBSTACLE = 1;
+		const TAG_BULLET = 2;
+		const TAG_WALL = 3;
+		const TAG_PICKUP = 4;
 		const loop = new GameLoop((dt_ms: number) => {
 			const mask = inputManager.getMask();
 			coreRef.apply_input(mask);
@@ -95,22 +101,63 @@ function App() {
 			);
 			coreRef.update(dt_ms);
 
-			// Audio Events
-			const eventPtr = Number(coreRef.get_event_buffer_ptr());
-			const eventLen = Number(coreRef.get_event_buffer_len());
-			if (eventLen > 0) {
-				const eventView = new Float32Array(
+			// Contact buffer: read raw contact quads [e1, tag1, e2, tag2]
+			const contactPtr = Number(coreRef.get_contact_buffer_ptr());
+			const contactLen = Number(coreRef.get_contact_buffer_len());
+			if (contactLen > 0) {
+				const contactView = new Float32Array(
 					wasmMemRef.buffer,
-					eventPtr,
-					eventLen,
+					contactPtr,
+					contactLen,
 				);
-				for (let i = 0; i < eventLen / 3; i++) {
-					const type = eventView[i * 3];
-					if (type === 1.0) audio.playExplosion();
-					else if (type === 2.0) audio.playPing();
-					else if (type === 3.0) audio.playPing();
+				const toDespawn = new Set<number>();
+				let deltaScore = 0;
+				for (let i = 0; i < contactLen / 4; i++) {
+					const aIdF = contactView[i * 4];
+					const aTag = contactView[i * 4 + 1];
+					const bIdF = contactView[i * 4 + 2];
+					const bTag = contactView[i * 4 + 3];
+
+					// Bullet vs Obstacle -> despawn both, BOOM (+10)
+					const isBulletObstacle =
+						(aTag === TAG_BULLET && bTag === TAG_OBSTACLE) ||
+						(bTag === TAG_BULLET && aTag === TAG_OBSTACLE);
+					if (isBulletObstacle) {
+						toDespawn.add(Math.trunc(aIdF));
+						toDespawn.add(Math.trunc(bIdF));
+						audio.playExplosion();
+						deltaScore += 10;
+						continue;
+					}
+
+					// Bullet vs Wall -> despawn bullet only, CLINK
+					const isBulletWall =
+						(aTag === TAG_BULLET && bTag === TAG_WALL) ||
+						(bTag === TAG_BULLET && aTag === TAG_WALL);
+					if (isBulletWall) {
+						const bulletId = Math.trunc(aTag === TAG_BULLET ? aIdF : bIdF);
+						toDespawn.add(bulletId);
+						audio.playPing();
+						continue;
+					}
+
+					// Player vs Pickup -> despawn pickup only, PICKUP (+50)
+					const isPlayerPickup =
+						(aTag === TAG_PLAYER && bTag === TAG_PICKUP) ||
+						(bTag === TAG_PLAYER && aTag === TAG_PICKUP);
+					if (isPlayerPickup) {
+						const pickupId = Math.trunc(aTag === TAG_PICKUP ? aIdF : bIdF);
+						toDespawn.add(pickupId);
+						audio.playPing();
+						deltaScore += 50;
+					}
 				}
-				coreRef.clear_events();
+
+				if (toDespawn.size > 0) {
+					const arr = new Float32Array(Array.from(toDespawn.values()));
+					coreRef.apply_despawns(arr);
+				}
+				if (deltaScore > 0) setScore((s) => s + deltaScore);
 			}
 
 			// Render Zero-Copy
@@ -132,11 +179,11 @@ function App() {
 			);
 			setTickCount(coreRef.get_tick_count());
 
-			// Update UI state (score, health, etc.) from WASM
+			// Update UI state (health) from WASM — keep score managed in TS
 			try {
 				const uiState = coreRef.get_ui_state();
-				if (uiState && uiState.length >= 2) {
-					setScore(uiState[1]);
+				if (uiState && uiState.length >= 1) {
+					// uiState[0] is health; we do not override TS-managed score here
 				}
 			} catch {
 				// ignore if WASM bridge not ready

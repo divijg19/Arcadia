@@ -4,7 +4,6 @@ use wasm_bindgen::prelude::*;
 mod components;
 #[cfg(test)]
 mod engine_tests;
-pub mod game_logic;
 pub mod procgen;
 pub mod rng;
 mod systems;
@@ -24,7 +23,7 @@ pub struct ArcadiaCore {
     mouse_y: f32,
     is_mouse_down: bool,
     fire_cooldown: f64,
-    event_buffer: Vec<f32>,
+    contact_buffer: Vec<f32>,
     player_health: f32,
     score: f32,
 }
@@ -53,7 +52,7 @@ impl ArcadiaCore {
             mouse_y: 0.0,
             is_mouse_down: false,
             fire_cooldown: 0.0,
-            event_buffer: Vec::new(),
+            contact_buffer: Vec::new(),
             player_health: 100.0,
             score: 0.0,
         }
@@ -194,15 +193,21 @@ impl ArcadiaCore {
                 }
             }
 
-            // Run collision detection (bullets vs obstacles) -> get contact pairs
+            // Run collision detection -> get raw contact pairs; serialize to flat contact_buffer
             let contacts = systems::collision_system(&mut self.world);
-            // Process game rules (despawns, emit events, modify score)
-            game_logic::process_contacts(
-                &mut self.world,
-                contacts,
-                &mut self.event_buffer,
-                &mut self.score,
-            );
+
+            self.contact_buffer.clear();
+            for (e1, e2) in contacts {
+                let tag1 = self.world.get::<&components::Tag>(e1).ok().map(|r| *r);
+                let tag2 = self.world.get::<&components::Tag>(e2).ok().map(|r| *r);
+
+                if let (Some(t1), Some(t2)) = (tag1, tag2) {
+                    self.contact_buffer.push(e1.id() as f32);
+                    self.contact_buffer.push(t1 as u8 as f32);
+                    self.contact_buffer.push(e2.id() as f32);
+                    self.contact_buffer.push(t2 as u8 as f32);
+                }
+            }
 
             // Run lifetime system to despawn expired entities
             systems::lifetime_system(&mut self.world, self.tick_rate);
@@ -258,18 +263,23 @@ impl ArcadiaCore {
     }
 
     #[wasm_bindgen]
-    pub fn get_event_buffer_ptr(&self) -> *const f32 {
-        self.event_buffer.as_ptr()
+    pub fn get_contact_buffer_ptr(&self) -> *const f32 {
+        self.contact_buffer.as_ptr()
     }
 
     #[wasm_bindgen]
-    pub fn get_event_buffer_len(&self) -> usize {
-        self.event_buffer.len()
+    pub fn get_contact_buffer_len(&self) -> usize {
+        self.contact_buffer.len()
     }
 
     #[wasm_bindgen]
-    pub fn clear_events(&mut self) {
-        self.event_buffer.clear();
+    pub fn apply_despawns(&mut self, ids_to_despawn: &[f32]) {
+        for &id_float in ids_to_despawn {
+            let target_id = id_float as u32;
+            if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id) {
+                let _ = self.world.despawn(entity).ok();
+            }
+        }
     }
 
     #[wasm_bindgen]

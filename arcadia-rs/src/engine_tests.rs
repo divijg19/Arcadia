@@ -40,7 +40,7 @@ mod tests {
         core.spawn_bullet(200.0, 200.0, 10.0, 0.0);
 
         // Manually spawn an obstacle directly in front of it at (215, 200)
-        core.world.spawn((
+        let obstacle_ent = core.world.spawn((
             Position { x: 215.0, y: 200.0 },
             crate::components::Collider {
                 w: 32.0,
@@ -51,15 +51,45 @@ mod tests {
             },
             Tag::Obstacle,
         ));
+        // Track the manually spawned obstacle so `apply_despawns` can find it
+        core.entities.push(obstacle_ent);
 
         // Tick the simulation forward
         core.update(1000.0 / 60.0);
 
-        // Check Event Buffer (Should contain Event 1.0 = BOOM)
+        // Check contact buffer for a bullet <-> obstacle contact (BOOM)
+        let mut found = false;
+        for chunk in core.contact_buffer.chunks(4) {
+            let t1 = chunk[1] as u8;
+            let t2 = chunk[3] as u8;
+            if (t1 == Tag::Bullet as u8 && t2 == Tag::Obstacle as u8)
+                || (t2 == Tag::Bullet as u8 && t1 == Tag::Obstacle as u8)
+            {
+                found = true;
+                break;
+            }
+        }
         assert!(
-            core.event_buffer.contains(&1.0),
-            "Expected destruction event"
+            found,
+            "Expected destruction contact between bullet and obstacle"
         );
+
+        // Simulate the JS-side reaction: despawn both entities using `apply_despawns`
+        let mut bullet_opt: Option<hecs::Entity> = None;
+        for &e in core.entities.iter() {
+            if let Ok(t) = core.world.get::<&Tag>(e) {
+                if *t == Tag::Bullet {
+                    bullet_opt = Some(e);
+                    break;
+                }
+            }
+        }
+        let mut ids: Vec<f32> = Vec::new();
+        if let Some(b) = bullet_opt {
+            ids.push(b.id() as f32);
+        }
+        ids.push(obstacle_ent.id() as f32);
+        core.apply_despawns(&ids);
 
         // Ensure both bullet and obstacle are despawned
         let remaining_entities = core.world.len();
@@ -313,8 +343,8 @@ mod tests {
             Tag::Player,
         ));
 
-        // Pickup directly overlapping the player
-        core.world.spawn((
+        // Pickup directly overlapping the player (track it so tests may despawn)
+        let pickup_ent = core.world.spawn((
             Position { x: 105.0, y: 100.0 },
             crate::components::Collider {
                 w: 16.0,
@@ -325,21 +355,39 @@ mod tests {
             },
             Tag::Pickup,
         ));
+        core.entities.push(pickup_ent);
 
-        // Initial Score is 0
+        // Initial Score is 0 (engine no longer updates score; frontend is responsible)
         assert_eq!(core.get_ui_state()[1], 0.0);
+
+        // pickup is already tracked above
 
         // Tick the engine (Movement -> Collision -> Lifetime)
         core.update(1000.0 / 60.0);
 
-        // Check if Event 3.0 (Coin Collect) was emitted
-        assert!(
-            core.event_buffer.contains(&3.0),
-            "Expected Pickup event (3.0)"
-        );
+        // Check contact buffer for a player <-> pickup contact
+        let mut found_pickup = false;
+        for chunk in core.contact_buffer.chunks(4) {
+            let t1 = chunk[1] as u8;
+            let t2 = chunk[3] as u8;
+            if (t1 == Tag::Player as u8 && t2 == Tag::Pickup as u8)
+                || (t2 == Tag::Player as u8 && t1 == Tag::Pickup as u8)
+            {
+                found_pickup = true;
+                break;
+            }
+        }
+        assert!(found_pickup, "Expected player <-> pickup contact");
 
-        // Score must increase by 50
-        assert_eq!(core.get_ui_state()[1], 50.0, "Score did not increase!");
+        // Simulate frontend reaction: despawn the pickup
+        core.apply_despawns(&[pickup_ent.id() as f32]);
+
+        // Score remains 0 in the engine (frontend should increment)
+        assert_eq!(
+            core.get_ui_state()[1],
+            0.0,
+            "Engine should not modify score"
+        );
 
         // Only player should remain
         assert_eq!(core.world.len(), 1, "Pickup was not despawned!");
