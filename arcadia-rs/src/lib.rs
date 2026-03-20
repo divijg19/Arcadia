@@ -15,7 +15,6 @@ pub struct ArcadiaCore {
     render_buffer: Vec<f32>,
     world: World,
     entities: Vec<hecs::Entity>,
-    player_input: u8,
     camera_x: f32,
     camera_y: f32,
     mouse_x: f32,
@@ -43,7 +42,7 @@ impl ArcadiaCore {
             render_buffer: Vec::new(),
             world: World::new(),
             entities: Vec::new(),
-            player_input: 0,
+
             camera_x: 0.0,
             camera_y: 0.0,
             mouse_x: 0.0,
@@ -101,11 +100,7 @@ impl ArcadiaCore {
         });
         builder.add(tag);
 
-        // Temporary: We still rely on InputReceiver for the movement system.
-        // This will be removed in v1.0.2.
-        if tag == components::Tag::Player {
-            builder.add(components::InputReceiver);
-        }
+        // No InputReceiver injection — input control is handled by the host (TS)
 
         if lifetime_ms > 0.0 {
             builder.add(components::Lifetime {
@@ -126,9 +121,31 @@ impl ArcadiaCore {
         self.is_mouse_down = is_down;
     }
 
+    // Kinematic control FFI: set velocity directly from the host
     #[wasm_bindgen]
-    pub fn apply_input(&mut self, input_mask: u8) {
-        self.player_input = input_mask;
+    pub fn set_velocity(&mut self, id: f32, vx: f32, vy: f32) {
+        let target_id = id as u32;
+        if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id)
+            && let Ok(vel) = self
+                .world
+                .query_one_mut::<&mut components::Velocity>(entity)
+        {
+            vel.vx = vx;
+            vel.vy = vy;
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn apply_impulse(&mut self, id: f32, fx: f32, fy: f32) {
+        let target_id = id as u32;
+        if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id)
+            && let Ok(vel) = self
+                .world
+                .query_one_mut::<&mut components::Velocity>(entity)
+        {
+            vel.vx += fx;
+            vel.vy += fy;
+        }
     }
 
     pub fn update(&mut self, dt_ms: f64) {
@@ -137,9 +154,7 @@ impl ArcadiaCore {
             // Fixed-timestep tick
             self.current_tick = self.current_tick.wrapping_add(1);
 
-            // Run ECS systems
-            systems::apply_input_system(&mut self.world, self.player_input);
-
+            // Run ECS systems (input mapping moved to host/TS)
             systems::movement_system(&mut self.world);
 
             // Update camera to follow the player (center an 800x600 view)
@@ -274,19 +289,18 @@ impl ArcadiaCore {
 
         // Extract components from every entity present in the world. Use Option<&T>
         // in the query so missing components map to `None` in the snapshot.
-        for (_entity, pos_opt, vel_opt, render_opt, collider_opt, tag_opt, input_opt, life_opt) in
-            self.world
-                .query::<(
-                    hecs::Entity,
-                    Option<&components::Position>,
-                    Option<&components::Velocity>,
-                    Option<&components::Renderable>,
-                    Option<&components::Collider>,
-                    Option<&components::Tag>,
-                    Option<&components::InputReceiver>,
-                    Option<&components::Lifetime>,
-                )>()
-                .iter()
+        for (_entity, pos_opt, vel_opt, render_opt, collider_opt, tag_opt, life_opt) in self
+            .world
+            .query::<(
+                hecs::Entity,
+                Option<&components::Position>,
+                Option<&components::Velocity>,
+                Option<&components::Renderable>,
+                Option<&components::Collider>,
+                Option<&components::Tag>,
+                Option<&components::Lifetime>,
+            )>()
+            .iter()
         {
             snapshot.entities.push(components::EntitySnapshot {
                 pos: pos_opt.copied(),
@@ -294,7 +308,7 @@ impl ArcadiaCore {
                 render: render_opt.copied(),
                 collider: collider_opt.copied(),
                 tag: tag_opt.copied(),
-                input_recv: input_opt.is_some(),
+                input_recv: false,
                 lifetime: life_opt.copied(),
             });
         }
@@ -334,9 +348,7 @@ impl ArcadiaCore {
                 if let Some(l) = ent_snap.lifetime {
                     builder.add(l);
                 }
-                if ent_snap.input_recv {
-                    builder.add(components::InputReceiver);
-                }
+                // Note: InputReceiver no longer exists; input is handled by host (TS).
 
                 let ent = self.world.spawn(builder.build());
                 self.entities.push(ent);

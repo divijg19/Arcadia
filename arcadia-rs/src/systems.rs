@@ -5,40 +5,6 @@ use crate::components;
 type Cell = (hecs::Entity, f32, f32, f32, f32);
 type Grid = Vec<Vec<Cell>>;
 
-// Apply player input mask to any entity with a Velocity + InputReceiver
-pub fn apply_input_system(world: &mut World, input_mask: u8) {
-    // bitmask mapping matches InputManager in the TS frontend
-    // UP=1, DOWN=2, LEFT=4, RIGHT=8
-    let speed: f32 = 6.0;
-
-    for (vel, input_rcv) in world.query_mut::<(
-        &mut components::Velocity,
-        Option<&components::InputReceiver>,
-    )>() {
-        if input_rcv.is_none() {
-            continue;
-        }
-
-        let mut vx = 0.0f32;
-        let mut vy = 0.0f32;
-        if (input_mask & 1) != 0 {
-            vy -= speed;
-        }
-        if (input_mask & 2) != 0 {
-            vy += speed;
-        }
-        if (input_mask & 4) != 0 {
-            vx -= speed;
-        }
-        if (input_mask & 8) != 0 {
-            vx += speed;
-        }
-
-        vel.vx = vx;
-        vel.vy = vy;
-    }
-}
-
 // Axis-separated swept movement with sensor handling.
 pub fn movement_system(world: &mut World) {
     // Collect all solids (non-sensor) along with their layers
