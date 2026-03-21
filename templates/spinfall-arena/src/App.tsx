@@ -1,6 +1,6 @@
 import { createSignal, onMount, Show } from "solid-js";
 import "./App.css";
-import { ArcadiaEngine } from "./engine/ArcadiaEngine";
+import { ArcadiaEngine } from "arcadia-ts";
 
 type SceneState = "MENU" | "GAME";
 

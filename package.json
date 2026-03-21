@@ -4,18 +4,19 @@
   "type": "module",
   "private": true,
   "workspaces": [
-    "arcadia-ts"
+    "arcadia-ts",
+    "templates/*"
   ],
   "scripts": {
-    "dev": "wasm-pack build arcadia-rs --target web && cd arcadia-ts && bun run dev",
+    "dev": "wasm-pack build arcadia-rs --target web && cd templates/spinfall-arena && bun run dev",
     "test": "bun run test:rs",
     "test:rs": "cd arcadia-rs && cargo test",
-    "format": "bun run format:rs && bun run format:ts",
+    "format": "bun run format:rs && bun run format:spinfall-arena",
     "format:rs": "cd arcadia-rs && cargo fmt --all",
-    "format:ts": "cd arcadia-ts && bun run format",
-    "lint": "bun run lint:rs && bun run lint:ts",
+    "format:spinfall-arena": "cd templates/spinfall-arena && bun run format",
+    "lint": "bun run lint:rs && bun run lint:spinfall-arena",
     "lint:rs": "cd arcadia-rs && cargo clippy --all -- -D warnings",
-    "lint:ts": "cd arcadia-ts && bun run lint"
+    "lint:spinfall-arena": "cd templates/spinfall-arena && bun run lint"
   },
   "devDependencies": {
     "@types/bun": "^1.3.11",
