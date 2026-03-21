@@ -185,6 +185,7 @@ function App() {
 			TAG_PLAYER,
 			0,
 		);
+		engine.playerId = playerId as number;
 
 		// 2. Spawn Walls (Tag: 3, Layer: 2, Mask: 1)
 		for (let x = 0; x <= width; x += 32) {

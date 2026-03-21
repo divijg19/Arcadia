@@ -5,25 +5,25 @@
     "": {
       "name": "arcadia",
       "devDependencies": {
-        "@biomejs/biome": "latest",
-        "@types/bun": "latest",
+        "@biomejs/biome": "^2.4.8",
+        "@types/bun": "^1.3.11",
       },
       "peerDependencies": {
-        "typescript": "latest",
+        "typescript": "^5.9.3",
       },
     },
     "arcadia-ts": {
       "name": "arcadia-ts",
-      "version": "0.9.1",
+      "version": "1.0.2",
       "dependencies": {
-        "pixi.js": "^8.17.1",
-        "solid-js": "^1.9.11",
+        "pixi.js": "latest",
+        "solid-js": "latest",
       },
       "devDependencies": {
-        "@types/node": "^25.5.0",
-        "typescript": "~5.9.3",
-        "vite": "^8.0.1",
-        "vite-plugin-solid": "^2.11.11",
+        "@types/node": "latest",
+        "typescript": "latest",
+        "vite": "latest",
+        "vite-plugin-solid": "latest",
       },
     },
   },

@@ -8,7 +8,7 @@ export type ArcadiaCoreInstance = {
 	get_camera_x(): number;
 	get_camera_y(): number;
 	get_ui_state(): Float32Array;
-	apply_mouse(x: number, y: number, is_down: boolean): void;
+	set_camera(x: number, y: number): void;
 	set_velocity(id: number, vx: number, vy: number): void;
 	apply_impulse(id: number, fx: number, fy: number): void;
 	apply_despawns(ids: Float32Array): void;

@@ -17,9 +17,8 @@ pub struct ArcadiaCore {
     entities: Vec<hecs::Entity>,
     camera_x: f32,
     camera_y: f32,
-    mouse_x: f32,
-    mouse_y: f32,
-    is_mouse_down: bool,
+    // Camera is now controlled by the host (TypeScript)
+    // Mouse state is handled entirely by the host and not stored here.
     contact_buffer: Vec<f32>,
     player_health: f32,
     score: f32,
@@ -45,10 +44,7 @@ impl ArcadiaCore {
 
             camera_x: 0.0,
             camera_y: 0.0,
-            mouse_x: 0.0,
-            mouse_y: 0.0,
-            is_mouse_down: false,
-
+            // host-managed mouse/camera state
             contact_buffer: Vec::new(),
             player_health: 100.0,
             score: 0.0,
@@ -115,10 +111,10 @@ impl ArcadiaCore {
     }
 
     #[wasm_bindgen]
-    pub fn apply_mouse(&mut self, x: f32, y: f32, is_down: bool) {
-        self.mouse_x = x;
-        self.mouse_y = y;
-        self.is_mouse_down = is_down;
+    pub fn set_camera(&mut self, x: f32, y: f32) {
+        // Clamp camera so the viewport never shows outside the 2000x2000 world
+        self.camera_x = x.clamp(0.0, 2000.0 - 800.0);
+        self.camera_y = y.clamp(0.0, 2000.0 - 600.0);
     }
 
     // Kinematic control FFI: set velocity directly from the host
@@ -157,21 +153,8 @@ impl ArcadiaCore {
             // Run ECS systems (input mapping moved to host/TS)
             systems::movement_system(&mut self.world);
 
-            // Update camera to follow the player (center an 800x600 view)
-            for (pos, tag) in self
-                .world
-                .query::<(&components::Position, &components::Tag)>()
-                .iter()
-            {
-                if *tag == components::Tag::Player {
-                    self.camera_x = pos.x - 400.0;
-                    self.camera_y = pos.y - 300.0;
-                    // Clamp camera so the viewport never shows outside the 2000x2000 world
-                    self.camera_x = self.camera_x.clamp(0.0, 2000.0 - 800.0);
-                    self.camera_y = self.camera_y.clamp(0.0, 2000.0 - 600.0);
-                    break;
-                }
-            }
+            // Camera is controlled by the host (TypeScript). The host should
+            // compute camera based on entity positions and call `set_camera`.
 
             // Run collision detection -> get raw contact pairs; serialize to flat contact_buffer
             let contacts = systems::collision_system(&mut self.world);
