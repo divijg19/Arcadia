@@ -36,7 +36,7 @@ This architecture allows games to be:
 
 `Arcadia` uses a **Rust–TypeScript hybrid runtime**.
 
-
+```
 Input (TypeScript)
 ↓
 Game Logic (TypeScript)
@@ -46,7 +46,7 @@ Simulation (Rust WASM)
 State Snapshot
 ↓
 Rendering (TypeScript / PixiJS)
-
+```
 
 Rust owns simulation.
 

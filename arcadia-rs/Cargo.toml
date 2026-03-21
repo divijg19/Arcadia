@@ -1,6 +1,6 @@
 [package]
 name = "arcadia-rs"
-version = "1.0.3"
+version = "1.0.4"
 description = "Rust runtime for Arcadia, a browser game engine for WebAssembly."
 repository = "https://github.com/divijg19/arcadia/arcadia-rs"
 edition = "2024"
@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 wasm-bindgen = "0.2"
 hecs = "0.11"
 serde = { version = "1.0", features = ["derive"] }
-postcard = { version = "1.0", features = ["alloc"] }
+postcard = { version = "1.1", features = ["alloc"] }
 
 [profile.release]
 opt-level = "s"
