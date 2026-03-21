@@ -103,13 +103,18 @@ function App() {
 				engine.core.set_velocity(playerId, vx, vy);
 			}
 
-			// Temporary TS Firing Logic (v1.0.1): handle mouse firing client-side
+			// Firing Logic (use exact camera coords from engine)
 			if (fireCooldown > 0) fireCooldown -= 1000 / 60;
-			if (engine.input.isMouseDown() && fireCooldown <= 0) {
+			if (
+				engine.input.isMouseDown() &&
+				fireCooldown <= 0 &&
+				playerId !== null
+			) {
 				const camX = engine.core.get_camera_x();
 				const camY = engine.core.get_camera_y();
-				const px = camX + 400; // Approx player X
-				const py = camY + 300; // Approx player Y
+				// The player is always in the center of the 800x600 screen relative to the camera
+				const px = camX + 400;
+				const py = camY + 300;
 
 				const mx = engine.input.getMouseX() + camX;
 				const my = engine.input.getMouseY() + camY;
@@ -118,14 +123,13 @@ function App() {
 				const len = Math.sqrt(dx * dx + dy * dy);
 
 				if (len > 0) {
-					const vx = (dx / len) * 15.0;
-					const vy = (dy / len) * 15.0;
-					// Spawn Bullet (Tag: 2, Layer: 4, Mask: 0, Sprite: 1.0, Lifetime: 2000ms)
+					const bvx = (dx / len) * 15.0;
+					const bvy = (dy / len) * 15.0;
 					engine.core.spawn(
 						px,
 						py,
-						vx,
-						vy,
+						bvx,
+						bvy,
 						8,
 						8,
 						false,
