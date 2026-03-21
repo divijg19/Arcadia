@@ -8,15 +8,18 @@
     "templates/*"
   ],
   "scripts": {
-    "dev": "wasm-pack build arcadia-rs --target web && cd templates/spinfall-arena && bun run dev",
+    "spinfall": "wasm-pack build arcadia-rs --target web && cd templates/spinfall-arena && bun run dev",
+    "downleaf": "wasm-pack build arcadia-rs --target web && cd templates/downleaf && bun run dev",
     "test": "bun run test:rs",
     "test:rs": "cd arcadia-rs && cargo test",
-    "format": "bun run format:rs && bun run format:spinfall-arena",
+    "format": "bun run format:rs && bun run format:spinfall-arena && bun run format:downleaf",
     "format:rs": "cd arcadia-rs && cargo fmt --all",
     "format:spinfall-arena": "cd templates/spinfall-arena && bun run format",
-    "lint": "bun run lint:rs && bun run lint:spinfall-arena",
+    "format:downleaf": "cd templates/downleaf && bun run format",
+    "lint": "bun run lint:rs && bun run lint:spinfall-arena && bun run lint:downleaf",
     "lint:rs": "cd arcadia-rs && cargo clippy --all -- -D warnings",
-    "lint:spinfall-arena": "cd templates/spinfall-arena && bun run lint"
+    "lint:spinfall-arena": "cd templates/spinfall-arena && bun run lint",
+    "lint:downleaf": "cd templates/downleaf && bun run lint"
   },
   "devDependencies": {
     "@types/bun": "^1.3.11",

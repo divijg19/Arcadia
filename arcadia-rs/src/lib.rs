@@ -126,8 +126,12 @@ impl ArcadiaCore {
                 .world
                 .query_one_mut::<&mut components::Velocity>(entity)
         {
-            vel.vx = vx;
-            vel.vy = vy;
+            if !vx.is_nan() {
+                vel.vx = vx;
+            }
+            if !vy.is_nan() {
+                vel.vy = vy;
+            }
         }
     }
 
