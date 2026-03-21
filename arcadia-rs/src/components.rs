@@ -26,6 +26,13 @@ pub struct Lifetime {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
+pub struct Gravity {
+    pub acceleration: f32,
+    pub max_fall_speed: f32,
+    pub is_grounded: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Collider {
     pub w: f32,
     pub h: f32,
@@ -52,6 +59,7 @@ pub struct EntitySnapshot {
     pub tag: Option<Tag>,
     pub input_recv: bool,
     pub lifetime: Option<Lifetime>,
+    pub gravity: Option<Gravity>,
 }
 
 #[derive(Serialize, Deserialize)]

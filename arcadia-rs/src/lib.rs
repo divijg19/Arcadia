@@ -272,18 +272,19 @@ impl ArcadiaCore {
 
         // Extract components from every entity present in the world. Use Option<&T>
         // in the query so missing components map to `None` in the snapshot.
-        for (_entity, pos_opt, vel_opt, render_opt, collider_opt, tag_opt, life_opt) in self
-            .world
-            .query::<(
-                hecs::Entity,
-                Option<&components::Position>,
-                Option<&components::Velocity>,
-                Option<&components::Renderable>,
-                Option<&components::Collider>,
-                Option<&components::Tag>,
-                Option<&components::Lifetime>,
-            )>()
-            .iter()
+        for (_entity, pos_opt, vel_opt, render_opt, collider_opt, tag_opt, life_opt, grav_opt) in
+            self.world
+                .query::<(
+                    hecs::Entity,
+                    Option<&components::Position>,
+                    Option<&components::Velocity>,
+                    Option<&components::Renderable>,
+                    Option<&components::Collider>,
+                    Option<&components::Tag>,
+                    Option<&components::Lifetime>,
+                    Option<&components::Gravity>,
+                )>()
+                .iter()
         {
             snapshot.entities.push(components::EntitySnapshot {
                 pos: pos_opt.copied(),
@@ -293,6 +294,7 @@ impl ArcadiaCore {
                 tag: tag_opt.copied(),
                 input_recv: false,
                 lifetime: life_opt.copied(),
+                gravity: grav_opt.copied(),
             });
         }
 
@@ -331,6 +333,9 @@ impl ArcadiaCore {
                 if let Some(l) = ent_snap.lifetime {
                     builder.add(l);
                 }
+                if let Some(g) = ent_snap.gravity {
+                    builder.add(g);
+                }
                 // Note: InputReceiver no longer exists; input is handled by host (TS).
 
                 let ent = self.world.spawn(builder.build());
@@ -340,6 +345,32 @@ impl ArcadiaCore {
             true
         } else {
             false
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn is_grounded(&self, id: f32) -> bool {
+        let target_id = id as u32;
+        if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id)
+            && let Ok(grav) = self.world.get::<&components::Gravity>(entity)
+        {
+            return grav.is_grounded;
+        }
+        false
+    }
+
+    #[wasm_bindgen]
+    pub fn add_gravity(&mut self, id: f32, accel: f32, max_speed: f32) {
+        let target_id = id as u32;
+        if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id) {
+            let _ = self.world.insert_one(
+                entity,
+                components::Gravity {
+                    acceleration: accel,
+                    max_fall_speed: max_speed,
+                    is_grounded: false,
+                },
+            );
         }
     }
 }

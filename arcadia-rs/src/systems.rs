@@ -34,12 +34,21 @@ pub fn movement_system(world: &mut World) {
     };
 
     // Iterate movers (any entity with Position + Velocity + Collider)
-    for (_ent, pos, vel, col) in world.query_mut::<(
+    for (_ent, pos, vel, col, mut opt_grav) in world.query_mut::<(
         hecs::Entity,
         &mut components::Position,
         &mut components::Velocity,
         &components::Collider,
+        Option<&mut components::Gravity>,
     )>() {
+        // Apply Gravity (if the entity has it)
+        if let Some(ref mut grav) = opt_grav {
+            vel.vy += grav.acceleration;
+            if vel.vy > grav.max_fall_speed {
+                vel.vy = grav.max_fall_speed;
+            }
+            grav.is_grounded = false; // Assume falling until proven otherwise
+        }
         // --- X axis sweep with stepping ---
         if vel.vx != 0.0 {
             let steps = vel.vx.abs().ceil() as i32;
@@ -78,6 +87,18 @@ pub fn movement_system(world: &mut World) {
                         && overlaps(pos.x, next_y, col.w, col.h, sx, sy, sw, sh)
                     {
                         collided = true;
+
+                        // If we are falling DOWN and hit a solid, we are Grounded!
+                        if vel.vy > 0.0 {
+                            pos.y = sy - (sh * 0.5) - (col.h * 0.5);
+                            if let Some(ref mut grav) = opt_grav {
+                                grav.is_grounded = true;
+                            }
+                        } else {
+                            // Hitting our head on the ceiling
+                            pos.y = sy + (sh * 0.5) + (col.h * 0.5);
+                        }
+
                         vel.vy = 0.0;
                         break;
                     }
