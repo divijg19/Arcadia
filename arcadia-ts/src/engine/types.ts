@@ -9,6 +9,7 @@ export type ArcadiaCoreInstance = {
 	get_camera_y(): number;
 	get_ui_state(): Float32Array;
 	set_camera(x: number, y: number): void;
+	query_point(x: number, y: number): number;
 	is_grounded(id: number): boolean;
 	add_gravity(id: number, accel: number, max_speed: number): void;
 	set_velocity(id: number, vx: number, vy: number): void;
