@@ -6,6 +6,7 @@ import type { ArcadiaCoreInstance, WasmModule } from "./types";
 
 export class ArcadiaEngine {
 	public core!: ArcadiaCoreInstance;
+	public playerId?: number;
 	public renderer: Renderer;
 	public input: InputManager;
 	public audio: AudioEngine;
@@ -48,12 +49,6 @@ export class ArcadiaEngine {
 	}
 
 	private tick(dt_ms: number) {
-		this.core.apply_mouse(
-			this.input.getMouseX(),
-			this.input.getMouseY(),
-			this.input.isMouseDown(),
-		);
-
 		// Simulation
 		this.core.update(dt_ms);
 
@@ -69,11 +64,32 @@ export class ArcadiaEngine {
 		const rPtr = Number(this.core.get_render_buffer_ptr());
 		const rLen = Number(this.core.get_render_buffer_len());
 		const rView = new Float32Array(this.wasmMemory.buffer, rPtr, rLen);
-		this.renderer.draw(
-			rView,
-			this.core.get_camera_x(),
-			this.core.get_camera_y(),
-		);
+
+		// Compute camera in TS by reading the render buffer. If `playerId` is
+		// registered, find its Position and center the 800x600 viewport on it.
+		let camX = Number(this.core.get_camera_x());
+		let camY = Number(this.core.get_camera_y());
+		if (this.playerId !== undefined && rLen >= 5) {
+			const entityCount = Math.floor(rView.length / 5);
+			for (let i = 0; i < entityCount; i++) {
+				const off = i * 5;
+				const id = Math.trunc(rView[off + 0]);
+				if (id === Math.trunc(this.playerId)) {
+					const px = rView[off + 1];
+					const py = rView[off + 2];
+					camX = px - 400.0;
+					camY = py - 300.0;
+					camX = Math.min(Math.max(camX, 0.0), 2000.0 - 800.0);
+					camY = Math.min(Math.max(camY, 0.0), 2000.0 - 600.0);
+					if (typeof this.core.set_camera === "function") {
+						this.core.set_camera(camX, camY);
+					}
+					break;
+				}
+			}
+		}
+
+		this.renderer.draw(rView, camX, camY);
 
 		// Notify Game
 		if (this.onTick) this.onTick(this.core.get_tick_count());
