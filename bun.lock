@@ -5,25 +5,39 @@
     "": {
       "name": "arcadia",
       "devDependencies": {
-        "@biomejs/biome": "^2.4.8",
-        "@types/bun": "^1.3.11",
+        "@biomejs/biome": "latest",
+        "@types/bun": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "latest",
       },
     },
     "arcadia-ts": {
       "name": "arcadia-ts",
-      "version": "1.0.2",
+      "version": "1.0.4",
       "dependencies": {
-        "pixi.js": "latest",
-        "solid-js": "latest",
+        "pixi.js": "^8.17.1",
+        "solid-js": "^1.9.11",
       },
       "devDependencies": {
-        "@types/node": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
+        "@types/node": "^25.5.0",
+        "typescript": "~5.9.3",
+        "vite": "^8.0.1",
+        "vite-plugin-solid": "^2.11.11",
+      },
+    },
+    "templates/spinfall-arena": {
+      "name": "spinfall-arena",
+      "dependencies": {
+        "arcadia-ts": "workspace:*",
+        "pixi.js": "^8.0.0",
+        "solid-js": "^1.9.11",
+      },
+      "devDependencies": {
+        "@types/node": "^25.5.0",
+        "typescript": "~5.9.3",
+        "vite": "^8.0.0",
+        "vite-plugin-solid": "^2.11.11",
       },
     },
   },
@@ -269,6 +283,8 @@
     "solid-refresh": ["solid-refresh@0.6.3", "", { "dependencies": { "@babel/generator": "^7.23.6", "@babel/helper-module-imports": "^7.22.15", "@babel/types": "^7.23.6" }, "peerDependencies": { "solid-js": "^1.3" } }, "sha512-F3aPsX6hVw9ttm5LYlth8Q15x6MlI/J3Dn+o3EQyRTtTxidepSTwAYdozt01/YA+7ObcciagGEyXIopGZzQtbA=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
+
+    "spinfall-arena": ["spinfall-arena@workspace:templates/spinfall-arena"],
 
     "tiny-lru": ["tiny-lru@11.4.7", "", {}, "sha512-w/Te7uMUVeH0CR8vZIjr+XiN41V+30lkDdK+NRIDCUYKKuL9VcmaUEmaPISuwGhLlrTGh5yu18lENtR9axSxYw=="],
 

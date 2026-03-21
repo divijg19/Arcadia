@@ -7,7 +7,7 @@ export default defineConfig({
 	server: {
 		fs: {
 			// Allow serving files from the monorepo root (so arcadia-rs/pkg is reachable)
-			allow: [path.resolve(__dirname, "..")],
+			allow: [path.resolve(__dirname, "../..")],
 		},
 	},
 });
