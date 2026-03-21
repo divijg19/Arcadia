@@ -364,6 +364,48 @@ impl ArcadiaCore {
     }
 
     #[wasm_bindgen]
+    pub fn query_point(&mut self, x: f32, y: f32) -> f32 {
+        let mut hits: Vec<hecs::Entity> = Vec::new();
+
+        // Brute force AABB check (fast for static puzzle scenes)
+        for entity in &self.entities {
+            if let Ok((pos, col)) = self
+                .world
+                .query_one_mut::<(&components::Position, &components::Collider)>(*entity)
+            {
+                let dx = (pos.x - x).abs();
+                let dy = (pos.y - y).abs();
+                if dx < (col.w * 0.5) && dy < (col.h * 0.5) {
+                    hits.push(*entity);
+                }
+            }
+        }
+
+        if hits.is_empty() {
+            return -1.0;
+        }
+
+        // Sort hits by Y-coordinate (render order) so topmost is first
+        hits.sort_by(|a, b| {
+            let pos_a = self
+                .world
+                .query_one_mut::<&components::Position>(*a)
+                .unwrap()
+                .y;
+            let pos_b = self
+                .world
+                .query_one_mut::<&components::Position>(*b)
+                .unwrap()
+                .y;
+            pos_b
+                .partial_cmp(&pos_a)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        hits[0].id() as f32
+    }
+
+    #[wasm_bindgen]
     pub fn add_gravity(&mut self, id: f32, accel: f32, max_speed: f32) {
         let target_id = id as u32;
         if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id) {
