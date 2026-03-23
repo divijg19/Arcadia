@@ -134,7 +134,15 @@ function App() {
 	};
 
 	return (
-		<div class="app-root">
+		<div class="app-root" style={{ position: "relative" }}>
+			{/* Canvas is ALWAYS in the DOM so onMount can attach PixiJS to it */}
+			<canvas
+				id="game-canvas"
+				width="800"
+				height="600"
+				style={{ display: "block", cursor: "pointer" }}
+			></canvas>
+
 			<Show when={scene() === "MENU"}>
 				<div class="menu-screen">
 					<h1>BABYLON ESTATE</h1>
@@ -146,13 +154,6 @@ function App() {
 			</Show>
 
 			<Show when={scene() === "GAME"}>
-				<canvas
-					id="game-canvas"
-					width="800"
-					height="600"
-					style={{ display: "block", cursor: "pointer" }}
-				></canvas>
-
 				{/* SolidJS UI Overlay for Inventory */}
 				<div
 					style={{
