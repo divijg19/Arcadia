@@ -210,7 +210,15 @@ function App() {
 	};
 
 	return (
-		<div class="app-root">
+		<div class="app-root" style={{ position: "relative" }}>
+			{/* Canvas is ALWAYS in the DOM so onMount can attach PixiJS to it */}
+			<canvas
+				id="game-canvas"
+				width="800"
+				height="600"
+				style={{ display: "block" }}
+			></canvas>
+
 			<Show when={scene() === "MENU"}>
 				<div class="menu-screen">
 					<h1>ARCADIA ENGINE</h1>
@@ -222,22 +230,23 @@ function App() {
 			</Show>
 
 			<Show when={scene() === "GAME"}>
-				<canvas
-					id="game-canvas"
-					width="800"
-					height="600"
-					style={{ display: "block" }}
-				></canvas>
 				<div
 					class="ui-overlay"
-					style="position:absolute; top:10px; left:10px; color:white; font-family:monospace; pointer-events:none;"
+					style={{
+						position: "absolute",
+						top: "10px",
+						left: "10px",
+						color: "white",
+						"font-family": "monospace",
+						"pointer-events": "none",
+					}}
 				>
 					<div>Ticks: {tickCount()}</div>
 					<div>Score: {score()}</div>
 				</div>
 				<div
 					class="save-controls"
-					style="position:absolute; bottom:10px; left:10px;"
+					style={{ position: "absolute", bottom: "10px", left: "10px" }}
 				>
 					<button
 						type="button"
