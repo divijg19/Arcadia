@@ -37,6 +37,43 @@ function App() {
 	let width = 2000;
 	let height = 2000;
 
+	// --- Save/Load helpers (isolated storage key for Spinfall) ---
+	const saveGame = () => {
+		if (!engine.core) return;
+		engine.core.set_score(score()); // ensure latest score is stored in WASM
+		const bytes = engine.core.save_state();
+		let binary = "";
+		for (let i = 0; i < bytes.length; i++)
+			binary += String.fromCharCode(bytes[i] ?? 0);
+		localStorage.setItem("arcadia_spinfall_save", btoa(binary));
+		console.log("Spinfall Saved!");
+	};
+
+	const loadGame = () => {
+		if (!engine.core) return;
+		const b64 = localStorage.getItem("arcadia_spinfall_save");
+		if (b64) {
+			const str = atob(b64);
+			const bytes = new Uint8Array(str.length);
+			for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i);
+			if (engine.core.load_state(bytes)) {
+				setScore(Number(engine.core.get_ui_state()[1] ?? 0));
+				console.log("Spinfall Loaded!");
+			}
+		}
+	};
+
+	// Hotkeys attached at App scope so closures read latest signals
+	window.addEventListener("keydown", (e) => {
+		if (e.key === "F5") {
+			e.preventDefault();
+			saveGame();
+		} else if (e.key === "F9") {
+			e.preventDefault();
+			loadGame();
+		}
+	});
+
 	onMount(async () => {
 		const canvas = document.getElementById("game-canvas") as HTMLCanvasElement;
 		await engine.init(canvas);
@@ -95,11 +132,9 @@ function App() {
 			setTickCount(ticks);
 
 			// 1. EXTRACT TRUE PLAYER POSITION (Zero-Copy)
-			// We must find the player's actual X/Y, because the camera stops at the world bounds!
-			let playerX = width / 2; // Fallback
+			let playerX = width / 2;
 			let playerY = height / 2;
 
-			// Access the private wasmMemory (TypeScript-safe cast to avoid exposing it fully)
 			const memory = (engine as unknown as { wasmMemory: WebAssembly.Memory })
 				.wasmMemory;
 			const rPtr = Number(engine.core.get_render_buffer_ptr());
@@ -140,12 +175,8 @@ function App() {
 			if (engine.input.isMouseDown() && fireCooldown <= 0) {
 				const camX = engine.core.get_camera_x();
 				const camY = engine.core.get_camera_y();
-
-				// Convert mouse screen coordinates to absolute world coordinates
 				const mx = engine.input.getMouseX() + camX;
 				const my = engine.input.getMouseY() + camY;
-
-				// Calculate trajectory from the true player position
 				const dx = mx - playerX;
 				const dy = my - playerY;
 				const len = Math.sqrt(dx * dx + dy * dy);
@@ -153,7 +184,6 @@ function App() {
 				if (len > 0) {
 					const bvx = (dx / len) * 15.0;
 					const bvy = (dy / len) * 15.0;
-					// FIX: Increased Bullet Collider from 8x8 to 16x16 to prevent high-speed tunneling through 32px walls
 					engine.core.spawn(
 						playerX,
 						playerY,
@@ -173,7 +203,6 @@ function App() {
 			}
 
 			// 4. CAMERA CLAMPING
-			// The engine expects the TypeScript wrapper to dictate the camera position.
 			let camX = playerX - 400;
 			let camY = playerY - 300;
 			camX = Math.max(0, Math.min(camX, width - 800));
@@ -181,26 +210,8 @@ function App() {
 			engine.core.set_camera(camX, camY);
 		};
 
-		// Quick Save/Load Hotkeys
-		window.addEventListener("keydown", (e) => {
-			if (e.key === "F5") {
-				e.preventDefault();
-				const bytes = engine.core.save_state();
-				localStorage.setItem(
-					"arcadia_save",
-					btoa(String.fromCharCode.apply(null, bytes as unknown as number[])),
-				);
-			} else if (e.key === "F9") {
-				e.preventDefault();
-				const b64 = localStorage.getItem("arcadia_save");
-				if (b64) {
-					const str = atob(b64);
-					const bytes = new Uint8Array(str.length);
-					for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i);
-					engine.core.load_state(bytes);
-				}
-			}
-		});
+		// Start Loop (ProcGen moved to TS)
+		engine.start();
 	});
 
 	const startGame = () => {
@@ -317,33 +328,10 @@ function App() {
 					class="save-controls"
 					style={{ position: "absolute", bottom: "10px", left: "10px" }}
 				>
-					<button
-						type="button"
-						onClick={() => {
-							const bytes = engine.core.save_state();
-							localStorage.setItem(
-								"arcadia_save",
-								btoa(
-									String.fromCharCode.apply(null, bytes as unknown as number[]),
-								),
-							);
-						}}
-					>
+					<button type="button" onClick={saveGame}>
 						Save State
 					</button>
-					<button
-						type="button"
-						onClick={() => {
-							const b64 = localStorage.getItem("arcadia_save");
-							if (b64) {
-								const str = atob(b64);
-								const bytes = new Uint8Array(str.length);
-								for (let i = 0; i < str.length; i++)
-									bytes[i] = str.charCodeAt(i);
-								engine.core.load_state(bytes);
-							}
-						}}
-					>
+					<button type="button" onClick={loadGame}>
 						Load State
 					</button>
 				</div>
