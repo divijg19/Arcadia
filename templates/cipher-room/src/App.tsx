@@ -108,9 +108,10 @@ function App() {
 		});
 
 		// Rusty Key (Pickup - Z-Indexed on top of the desk)
+		// Y=310 forces it to render AND raycast ON TOP of the desk
 		const keyId = engine.core.spawn(
 			450,
-			280,
+			310,
 			0,
 			0,
 			32,

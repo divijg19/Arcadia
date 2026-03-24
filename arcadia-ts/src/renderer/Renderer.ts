@@ -76,7 +76,6 @@ export class Renderer {
 				g.beginFill(0xe74c3c);
 				g.drawRect(64, 0, 32, 32);
 				g.endFill();
-
 				// "wall" at (112, 16) -> (96, 0, 32, 32)
 				g.beginFill(0x7f8c8d);
 				g.drawRect(96, 0, 32, 32);
@@ -178,8 +177,8 @@ export class Renderer {
 			}
 		}
 
-		const frameName = this.spriteMap[Math.trunc(spriteId)] || this.spriteMap[0];
-		const tex = this.textures[frameName] || Texture.WHITE;
+		const frameName = (this.spriteMap[Math.trunc(spriteId)] ?? this.spriteMap[0]) as string;
+		const tex = this.textures[frameName] ?? Texture.WHITE;
 
 		const s = new Sprite(tex) as PixiTaggedSprite;
 		s.anchor.set(0.5);
@@ -209,12 +208,17 @@ export class Renderer {
 		for (let i = 0; i < entityCount; i++) {
 			const offset = i * 5;
 			const id = view[offset + 0];
+			if (typeof id !== "number") continue;
 			const idIndex = Math.trunc(id);
 
 			const spriteId = view[offset + 4];
-			const sprite = this.getOrCreateSprite(idIndex, spriteId);
-			sprite.x = view[offset + 1];
-			sprite.y = view[offset + 2];
+			const spriteIdNum = typeof spriteId === "number" ? Math.trunc(spriteId) : 0;
+			const sprite = this.getOrCreateSprite(idIndex, spriteIdNum);
+
+			const x = view[offset + 1];
+			const y = view[offset + 2];
+			if (typeof x === "number") sprite.x = x;
+			if (typeof y === "number") sprite.y = y;
 			sprite.visible = true;
 		}
 	}
