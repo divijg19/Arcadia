@@ -33,6 +33,10 @@ function App() {
 	const TAG_WALL = 3;
 	const TAG_PICKUP = 4;
 
+	// World size (promoted so onTick can access when camera clamps)
+	let width = 2000;
+	let height = 2000;
+
 	onMount(async () => {
 		const canvas = document.getElementById("game-canvas") as HTMLCanvasElement;
 		await engine.init(canvas);
@@ -70,13 +74,13 @@ function App() {
 					);
 					engine.audio.playSound(2); // Clink
 				} else if (isPlayerPickup) {
-					despawns.add(
-						tag1 === TAG_PICKUP
-							? (id1 as unknown as number)
-							: (id2 as unknown as number),
-					);
-					engine.audio.playSound(2); // Ping
-					setScore((s) => s + 50);
+					const candidate = tag1 === TAG_PICKUP ? id1 : id2;
+					if (typeof candidate === "number") {
+						const picked = Number(candidate);
+						despawns.add(picked);
+						engine.audio.playSound(2); // Ping
+						setScore((s) => s + 50);
+					}
 				}
 			}
 
@@ -90,48 +94,73 @@ function App() {
 		engine.onTick = (ticks) => {
 			setTickCount(ticks);
 
-			// Player Movement Logic (5.0 pixels per tick)
-			if (playerId !== null) {
-				const mask = engine.input.getMask();
-				let vx = 0;
-				let vy = 0;
-				if ((mask & 1) !== 0) vy = -5.0; // UP
-				if ((mask & 2) !== 0) vy = 5.0; // DOWN
-				if ((mask & 4) !== 0) vx = -5.0; // LEFT
-				if ((mask & 8) !== 0) vx = 5.0; // RIGHT
+			// 1. EXTRACT TRUE PLAYER POSITION (Zero-Copy)
+			// We must find the player's actual X/Y, because the camera stops at the world bounds!
+			let playerX = width / 2; // Fallback
+			let playerY = height / 2;
 
-				engine.core.set_velocity(playerId, vx, vy);
+			// Access the private wasmMemory (TypeScript-safe cast to avoid exposing it fully)
+			const memory = (engine as unknown as { wasmMemory: WebAssembly.Memory })
+				.wasmMemory;
+			const rPtr = Number(engine.core.get_render_buffer_ptr());
+			const rLen = Number(engine.core.get_render_buffer_len());
+
+			if (rLen > 0) {
+				const rView = new Float32Array(memory.buffer, rPtr, rLen);
+				const entityCount = Math.floor(rView.length / 5);
+				for (let i = 0; i < entityCount; i++) {
+					const offset = i * 5;
+					const entId = rView[offset + 0];
+					if (
+						playerId !== null &&
+						typeof entId === "number" &&
+						entId === playerId
+					) {
+						const pxv = rView[offset + 1];
+						const pyv = rView[offset + 2];
+						if (typeof pxv === "number") playerX = pxv;
+						if (typeof pyv === "number") playerY = pyv;
+						break;
+					}
+				}
 			}
 
-			// Firing Logic (use exact camera coords from engine)
+			// 2. KINEMATIC MOVEMENT
+			const mask = engine.input.getMask();
+			let vx = 0;
+			let vy = 0;
+			if ((mask & 1) !== 0) vy = -5.0; // UP
+			if ((mask & 2) !== 0) vy = 5.0; // DOWN
+			if ((mask & 4) !== 0) vx = -5.0; // LEFT
+			if ((mask & 8) !== 0) vx = 5.0; // RIGHT
+			if (playerId !== null) engine.core.set_velocity(playerId, vx, vy);
+
+			// 3. EXACT FIRING MATH
 			if (fireCooldown > 0) fireCooldown -= 1000 / 60;
-			if (
-				engine.input.isMouseDown() &&
-				fireCooldown <= 0 &&
-				playerId !== null
-			) {
+			if (engine.input.isMouseDown() && fireCooldown <= 0) {
 				const camX = engine.core.get_camera_x();
 				const camY = engine.core.get_camera_y();
-				// The player is always in the center of the 800x600 screen relative to the camera
-				const px = camX + 400;
-				const py = camY + 300;
 
+				// Convert mouse screen coordinates to absolute world coordinates
 				const mx = engine.input.getMouseX() + camX;
 				const my = engine.input.getMouseY() + camY;
-				const dx = mx - px;
-				const dy = my - py;
+
+				// Calculate trajectory from the true player position
+				const dx = mx - playerX;
+				const dy = my - playerY;
 				const len = Math.sqrt(dx * dx + dy * dy);
 
 				if (len > 0) {
 					const bvx = (dx / len) * 15.0;
 					const bvy = (dy / len) * 15.0;
+					// FIX: Increased Bullet Collider from 8x8 to 16x16 to prevent high-speed tunneling through 32px walls
 					engine.core.spawn(
-						px,
-						py,
+						playerX,
+						playerY,
 						bvx,
 						bvy,
-						8,
-						8,
+						16,
+						16,
 						false,
 						4,
 						0,
@@ -142,6 +171,14 @@ function App() {
 					fireCooldown = 150;
 				}
 			}
+
+			// 4. CAMERA CLAMPING
+			// The engine expects the TypeScript wrapper to dictate the camera position.
+			let camX = playerX - 400;
+			let camY = playerY - 300;
+			camX = Math.max(0, Math.min(camX, width - 800));
+			camY = Math.max(0, Math.min(camY, height - 600));
+			engine.core.set_camera(camX, camY);
 		};
 
 		// Quick Save/Load Hotkeys
@@ -171,8 +208,8 @@ function App() {
 		const seed = Math.floor(Date.now() / 1000);
 		const random = mulberry32(seed);
 
-		const width = 2000;
-		const height = 2000;
+		width = 2000;
+		height = 2000;
 
 		// 1. Spawn Player (Tag: 0, Layer: 1, Mask: 2)
 		playerId = engine.core.spawn(

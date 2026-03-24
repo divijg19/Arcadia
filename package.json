@@ -8,6 +8,7 @@
     "templates/*"
   ],
   "scripts": {
+    "type-check": "cd arcadia-ts && tsc --noEmit && cd ../templates/spinfall-arena && tsc --noEmit && cd ../downleaf && tsc --noEmit && cd ../cipher-room && tsc --noEmit",
     "spinfall": "wasm-pack build arcadia-rs --target web && cd templates/spinfall-arena && bun run dev",
     "downleaf": "wasm-pack build arcadia-rs --target web && cd templates/downleaf && bun run dev",
     "cipher-room": "wasm-pack build arcadia-rs --target web && cd templates/cipher-room && bun run dev",
@@ -29,6 +30,6 @@
     "@biomejs/biome": "^2.4.8"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   }
 }

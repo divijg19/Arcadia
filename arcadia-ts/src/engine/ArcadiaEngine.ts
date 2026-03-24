@@ -73,16 +73,18 @@ export class ArcadiaEngine {
 			const entityCount = Math.floor(rView.length / 5);
 			for (let i = 0; i < entityCount; i++) {
 				const off = i * 5;
-				const id = Math.trunc(rView[off + 0]);
-				if (id === Math.trunc(this.playerId)) {
+				const entId = rView[off + 0];
+				if (typeof entId === "number" && this.playerId !== undefined && Math.trunc(entId) === Math.trunc(this.playerId)) {
 					const px = rView[off + 1];
 					const py = rView[off + 2];
-					camX = px - 400.0;
-					camY = py - 300.0;
-					camX = Math.min(Math.max(camX, 0.0), 2000.0 - 800.0);
-					camY = Math.min(Math.max(camY, 0.0), 2000.0 - 600.0);
-					if (typeof this.core.set_camera === "function") {
-						this.core.set_camera(camX, camY);
+					if (typeof px === "number" && typeof py === "number") {
+						camX = px - 400.0;
+						camY = py - 300.0;
+						camX = Math.min(Math.max(camX, 0.0), 2000.0 - 800.0);
+						camY = Math.min(Math.max(camY, 0.0), 2000.0 - 600.0);
+						if (typeof this.core.set_camera === "function") {
+							this.core.set_camera(camX, camY);
+						}
 					}
 					break;
 				}
