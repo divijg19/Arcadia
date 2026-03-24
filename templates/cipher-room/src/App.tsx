@@ -16,7 +16,12 @@ function App() {
 	// We will map Rust Entity IDs to human-readable interactive data
 	const interactables = new Map<
 		number,
-		{ name: string; description: string; isCollectible: boolean }
+		{
+			name: string;
+			description: string;
+			isCollectible: boolean;
+			clicks: number;
+		}
 	>();
 
 	const engine = new ArcadiaEngine();
@@ -29,22 +34,68 @@ function App() {
 		canvas.addEventListener("mousedown", (e) => {
 			if (scene() !== "GAME") return;
 
-			// Convert Screen to World
 			const rect = canvas.getBoundingClientRect();
-			const mouseX = e.clientX - rect.left;
-			const mouseY = e.clientY - rect.top;
+			const worldX = e.clientX - rect.left + engine.core.get_camera_x();
+			const worldY = e.clientY - rect.top + engine.core.get_camera_y();
 
-			const worldX = mouseX + engine.core.get_camera_x();
-			const worldY = mouseY + engine.core.get_camera_y();
-
-			// Query Rust for the clicked entity!
 			const clickedId = engine.core.query_point(worldX, worldY);
 
 			if (clickedId !== -1.0) {
 				const item = interactables.get(Math.trunc(clickedId));
 				if (item) {
+					// --- MULTI-STEP PUZZLE LOGIC ---
+
+					// Puzzle 1: Move the Painting (Requires 3 Clicks)
+					if (item.name === "Painting") {
+						// First interaction shows an initial inspection message, counter starts afterwards
+						if (item.clicks === 0) {
+							// Show the original description on first interaction, then start the counter
+							item.clicks = 1;
+							setDialogue(item.description);
+							engine.audio.playSound(1); // Thud
+							return;
+						}
+
+						// Subsequent clicks increment the counter and show progress
+						item.clicks += 1;
+						if (item.clicks < 3) {
+							setDialogue(
+								`The painting shifts slightly upon touching it... Maybe try clicking it a few more times?`,
+							);
+							engine.audio.playSound(1); // Thud
+						} else {
+							// Third click: reveal
+							setDialogue(
+								"You shifted the painting. Something was hidden behind it!",
+							);
+							engine.audio.playSound(2); // Ping
+							// Move the painting out of the way to reveal the key!
+							engine.core.set_velocity(clickedId, 0, -200);
+							interactables.delete(Math.trunc(clickedId));
+						}
+						return;
+					}
+
+					// Puzzle 2: Unlock the Desk
+					if (item.name === "Desk") {
+						if (inventory().includes("Rusty Key")) {
+							setDialogue(
+								"The Rusty Key fit! Inside the drawer, you found a Diary.",
+							);
+							engine.audio.playSound(2);
+							setInventory([...inventory(), "Diary"]);
+							// Remove the key from inventory
+							setInventory((inv) => inv.filter((i) => i !== "Rusty Key"));
+						} else {
+							setDialogue(item.description);
+							engine.audio.playSound(1); // Thud
+						}
+						return;
+					}
+
+					// Standard Collectible Logic
 					setDialogue(item.description);
-					engine.audio.playSound(2); // Ping
+					engine.audio.playSound(2);
 
 					if (item.isCollectible) {
 						setInventory([...inventory(), item.name]);
@@ -53,21 +104,19 @@ function App() {
 					}
 				}
 			} else {
-				setDialogue(null); // Clicked empty space, close dialogue
+				setDialogue(null);
 			}
 		});
 	});
 
 	const startGame = () => {
 		setScene("GAME");
+		engine.core.set_camera(0, 0);
 
-		// Spawn a static "Escape Room" scene
-		engine.core.set_camera(0, 0); // Lock camera at origin
-
-		// Desk (Obstacle)
+		// 1. The Desk (Obstacle)
 		const deskId = engine.core.spawn(
 			400,
-			300,
+			400,
 			0,
 			0,
 			200,
@@ -81,37 +130,15 @@ function App() {
 		);
 		interactables.set(deskId, {
 			name: "Desk",
-			description: "An old mahogany desk. One drawer is locked.",
+			description: "An old mahogany desk. One drawer is locked tight.",
 			isCollectible: false,
+			clicks: 0,
 		});
 
-		// Painting (Obstacle)
-		const paintingId = engine.core.spawn(
-			400,
-			100,
-			0,
-			0,
-			120,
-			80,
-			false,
-			2,
-			1,
-			3.0,
-			TAG_OBSTACLE,
-			0,
-		);
-		interactables.set(paintingId, {
-			name: "Painting",
-			description:
-				"A painting of the Hanging Gardens. There is something behind it...",
-			isCollectible: false,
-		});
-
-		// Rusty Key (Pickup - Z-Indexed on top of the desk)
-		// Y=310 forces it to render AND raycast ON TOP of the desk
+		// 2. The Key (Pickup) - Hidden BEHIND the painting! (Spawned first so its Z-Index/Y is lower)
 		const keyId = engine.core.spawn(
-			450,
-			310,
+			600,
+			150,
 			0,
 			0,
 			32,
@@ -125,12 +152,35 @@ function App() {
 		);
 		interactables.set(keyId, {
 			name: "Rusty Key",
-			description: "You found a Rusty Key!",
+			description: "A small, rusted brass key.",
 			isCollectible: true,
+			clicks: 0,
 		});
 
-		// Start a dummy loop just to render the static scene
-		engine.onTick = () => {};
+		// 3. The Painting (Obstacle) - Spawned in front of the key
+		// Painting Y is slightly larger so it renders on top of the key until moved
+		const paintingId = engine.core.spawn(
+			600,
+			170,
+			0,
+			0,
+			120,
+			160,
+			false,
+			2,
+			1,
+			3.0,
+			TAG_OBSTACLE,
+			0,
+		);
+		interactables.set(paintingId, {
+			name: "Painting",
+			description: "A painting of the Hanging Gardens. It looks loose...",
+			isCollectible: false,
+			clicks: 0,
+		});
+
+		engine.onTick = () => { };
 		engine.start();
 	};
 
