@@ -180,7 +180,7 @@ function App() {
 			clicks: 0,
 		});
 
-		engine.onTick = () => { };
+		engine.onTick = () => {};
 		engine.start();
 	};
 

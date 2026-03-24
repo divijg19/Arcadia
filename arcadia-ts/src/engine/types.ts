@@ -8,6 +8,7 @@ export type ArcadiaCoreInstance = {
 	get_camera_x(): number;
 	get_camera_y(): number;
 	get_ui_state(): Float32Array;
+	set_score(s: number): void;
 	set_camera(x: number, y: number): void;
 	query_point(x: number, y: number): number;
 	is_grounded(id: number): boolean;

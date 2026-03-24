@@ -265,6 +265,11 @@ impl ArcadiaCore {
     }
 
     #[wasm_bindgen]
+    pub fn set_score(&mut self, s: f32) {
+        self.score = s;
+    }
+
+    #[wasm_bindgen]
     pub fn save_state(&self) -> Vec<u8> {
         // Build a snapshot containing global state + a serialized view of each entity
         let mut snapshot = components::WorldSnapshot {

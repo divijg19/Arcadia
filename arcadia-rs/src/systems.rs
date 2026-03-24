@@ -110,8 +110,8 @@ pub fn movement_system(world: &mut World) {
             }
         }
 
-        pos.x = pos.x.clamp(0.0, 2000.0);
-        pos.y = pos.y.clamp(0.0, 2000.0);
+        // Intentionally do not apply hardcoded world clamps here.
+        // World bounds/clamping are the responsibility of higher-level game code.
     }
 }
 
@@ -133,8 +133,8 @@ pub fn lifetime_system(world: &mut World, dt_ms: f64) {
 // Collision detection returns contact pairs (including sensors). Game logic is applied elsewhere.
 pub fn collision_system(world: &mut World) -> Vec<(hecs::Entity, hecs::Entity)> {
     const CELL_SIZE: f32 = 100.0;
-    const GRID_COLS: usize = 20;
-    const GRID_ROWS: usize = 20;
+    const GRID_COLS: usize = 100; // 10,000 pixels wide
+    const GRID_ROWS: usize = 100; // 10,000 pixels tall
     const GRID_SIZE: usize = GRID_COLS * GRID_ROWS;
 
     let mut grid: Grid = vec![Vec::new(); GRID_SIZE];
