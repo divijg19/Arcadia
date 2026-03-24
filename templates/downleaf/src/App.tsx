@@ -180,29 +180,83 @@ function App() {
 		engine.onTick = (ticks) => {
 			setTickCount(ticks);
 
-			// --- PLATFORMER CONTROLS ---
+			// 1. DYNAMICALLY FIND THE PLAYER (Fixes Save/Load Corruption)
+			let currentPlayerId = -1;
+			let playerX = 1000;
+			let playerY = 100;
+
+			const memory = (engine as unknown as { wasmMemory: WebAssembly.Memory })
+				.wasmMemory;
+			const rPtr = Number(engine.core.get_render_buffer_ptr());
+			const rLen = Number(engine.core.get_render_buffer_len());
+
+			if (rLen > 0) {
+				const rView = new Float32Array(memory.buffer, rPtr, rLen);
+				const entityCount = rLen / 5;
+				for (let i = 0; i < entityCount; i++) {
+					const offset = i * 5;
+					const id = rView[offset + 0];
+					const spriteId = rView[offset + 4];
+
+					// The Player always has spriteId 0.0
+					if (spriteId === 0.0 && typeof id === "number") {
+						const pxv = rView[offset + 1];
+						const pyv = rView[offset + 2];
+						currentPlayerId = id;
+						if (typeof pxv === "number") playerX = pxv;
+						if (typeof pyv === "number") playerY = pyv;
+						break;
+					}
+				}
+			}
+
+			// If the player is dead or missing, stop processing
+			if (currentPlayerId === -1) return;
+
+			// 2. PLATFORMER CONTROLS
 			const mask = engine.input.getMask();
 			let vx = 0;
-
-			// Left/Right Movement
 			if ((mask & 4) !== 0) vx = -6.0; // LEFT
 			if ((mask & 8) !== 0) vx = 6.0; // RIGHT
 
-			// Set X velocity, ignore Y (let gravity handle it)
-			engine.core.set_velocity(playerId as number, vx, NaN);
+			engine.core.set_velocity(currentPlayerId, vx, NaN);
 
-			// Jump Logic
+			// 3. JUMP LOGIC
 			if (jumpCooldown > 0) jumpCooldown--;
-
-			// If UP (1) or Spacebar is pressed
 			if ((mask & 1) !== 0 && jumpCooldown <= 0) {
-				// Check if we are touching the floor!
-				if (engine.core.is_grounded(playerId as number)) {
-					// Apply a massive upwards impulse
-					engine.core.apply_impulse(playerId as number, 0, -18.0);
-					engine.audio.playSound(2); // Jump Sound
-					jumpCooldown = 15; // Prevent double-triggering
+				if (engine.core.is_grounded(currentPlayerId)) {
+					engine.core.apply_impulse(currentPlayerId, 0, -18.0);
+					engine.audio.playSound(2);
+					jumpCooldown = 15;
 				}
+			}
+
+			// 4. CAMERA & DEATH PLANE LOGIC
+			const targetCamY = playerY - 300;
+			let currentCamY = engine.core.get_camera_y();
+
+			// If the player is WAY below the camera (e.g., just loaded a save state from deep down),
+			// instantly snap the camera to them to prevent an erroneous Death Plane trigger.
+			if (playerY - currentCamY > 1000 || currentCamY - playerY > 1000) {
+				currentCamY = targetCamY;
+			}
+
+			// Only move camera down (no scrolling back up)
+			let newCamY = Math.max(currentCamY, targetCamY);
+			newCamY = Math.max(0, Math.min(newCamY, height - 600)); // Clamp to world bounds
+
+			let newCamX = playerX - 400;
+			newCamX = Math.max(0, Math.min(newCamX, width - 800));
+
+			engine.core.set_camera(newCamX, newCamY);
+
+			// 5. TRUE DEATH PLANE
+			// The player only dies if they fall off the bottom of the *currently rendered* screen.
+			if (playerY > newCamY + 650) {
+				engine.core.apply_despawns(new Float32Array([currentPlayerId]));
+				engine.audio.playSound(1); // Boom
+				// Reset the score to punish the player for dying!
+				setScore(0);
 			}
 		};
 
