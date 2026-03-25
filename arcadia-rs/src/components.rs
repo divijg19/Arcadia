@@ -29,6 +29,7 @@ pub struct Lifetime {
 pub struct Gravity {
     pub acceleration: f32,
     pub max_fall_speed: f32,
+    pub inverted: bool,
     pub is_grounded: bool,
 }
 
