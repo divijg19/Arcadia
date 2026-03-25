@@ -148,6 +148,19 @@ impl ArcadiaCore {
         }
     }
 
+    #[wasm_bindgen]
+    pub fn set_position(&mut self, id: f32, x: f32, y: f32) {
+        let target_id = id as u32;
+        if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id)
+            && let Ok(pos) = self
+                .world
+                .query_one_mut::<&mut components::Position>(entity)
+        {
+            pos.x = x;
+            pos.y = y;
+        }
+    }
+
     pub fn update(&mut self, dt_ms: f64) {
         self.accumulator += dt_ms;
         while self.accumulator >= self.tick_rate {
@@ -179,11 +192,12 @@ impl ArcadiaCore {
             // Run lifetime system to despawn expired entities
             systems::lifetime_system(&mut self.world, self.tick_rate);
 
-            // Keep our entity list in sync with the world (remove despawned entities)
-            self.entities.retain(|e| self.world.contains(*e));
-
             self.accumulator -= self.tick_rate;
         }
+
+        // GUARANTEED GARBAGE COLLECTION EVERY FRAME
+        // Keep our entity list in sync with the world to prevent memory leaks
+        self.entities.retain(|e| self.world.contains(*e));
 
         // After processing zero or more fixed ticks, rebuild the flat render buffer
         // [ID, X, Y, Rotation, SpriteId] from all world entities that have a
@@ -247,6 +261,13 @@ impl ArcadiaCore {
                 let _ = self.world.despawn(entity).ok();
             }
         }
+    }
+
+    #[wasm_bindgen]
+    pub fn clear_world(&mut self) {
+        self.world.clear();
+        self.entities.clear();
+        self.contact_buffer.clear();
     }
 
     #[wasm_bindgen]
@@ -419,9 +440,20 @@ impl ArcadiaCore {
                 components::Gravity {
                     acceleration: accel,
                     max_fall_speed: max_speed,
+                    inverted: false,
                     is_grounded: false,
                 },
             );
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn invert_gravity(&mut self, id: f32, inverted: bool) {
+        let target_id = id as u32;
+        if let Some(&entity) = self.entities.iter().find(|e| e.id() == target_id)
+            && let Ok(grav) = self.world.query_one_mut::<&mut components::Gravity>(entity)
+        {
+            grav.inverted = inverted;
         }
     }
 }

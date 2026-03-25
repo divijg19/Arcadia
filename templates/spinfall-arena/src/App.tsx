@@ -135,8 +135,10 @@ function App() {
 			let playerX = width / 2;
 			let playerY = height / 2;
 
-			const memory = (engine as unknown as { wasmMemory: WebAssembly.Memory })
-				.wasmMemory;
+			const memory = engine.wasmExports?.memory as
+				| WebAssembly.Memory
+				| undefined;
+			if (!memory) return;
 			const rPtr = Number(engine.core.get_render_buffer_ptr());
 			const rLen = Number(engine.core.get_render_buffer_len());
 

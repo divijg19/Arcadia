@@ -43,9 +43,16 @@ pub fn movement_system(world: &mut World) {
     )>() {
         // Apply Gravity (if the entity has it)
         if let Some(ref mut grav) = opt_grav {
-            vel.vy += grav.acceleration;
-            if vel.vy > grav.max_fall_speed {
-                vel.vy = grav.max_fall_speed;
+            if grav.inverted {
+                vel.vy -= grav.acceleration;
+                if vel.vy < -grav.max_fall_speed {
+                    vel.vy = -grav.max_fall_speed;
+                }
+            } else {
+                vel.vy += grav.acceleration;
+                if vel.vy > grav.max_fall_speed {
+                    vel.vy = grav.max_fall_speed;
+                }
             }
             grav.is_grounded = false; // Assume falling until proven otherwise
         }
@@ -88,15 +95,22 @@ pub fn movement_system(world: &mut World) {
                     {
                         collided = true;
 
-                        // If we are falling DOWN and hit a solid, we are Grounded!
+                        // If we are moving DOWN (positive vy) and hit a solid, we are Grounded
                         if vel.vy > 0.0 {
                             pos.y = sy - (sh * 0.5) - (col.h * 0.5);
-                            if let Some(ref mut grav) = opt_grav {
+                            if let Some(ref mut grav) = opt_grav
+                                && !grav.inverted
+                            {
                                 grav.is_grounded = true;
                             }
                         } else {
                             // Hitting our head on the ceiling
                             pos.y = sy + (sh * 0.5) + (col.h * 0.5);
+                            if let Some(ref mut grav) = opt_grav
+                                && grav.inverted
+                            {
+                                grav.is_grounded = true;
+                            }
                         }
 
                         vel.vy = 0.0;

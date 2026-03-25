@@ -2,7 +2,7 @@ import { AudioEngine } from "../audio/AudioEngine";
 import { InputManager } from "../input/InputManager";
 import { Renderer } from "../renderer/Renderer";
 import { GameLoop } from "./GameLoop";
-import type { ArcadiaCoreInstance, WasmModule } from "./types";
+import type { ArcadiaCoreInstance, WasmInitResult, WasmModule } from "./types";
 
 export class ArcadiaEngine {
 	public core!: ArcadiaCoreInstance;
@@ -11,7 +11,7 @@ export class ArcadiaEngine {
 	public input: InputManager;
 	public audio: AudioEngine;
 	private loop!: GameLoop;
-	private wasmMemory!: WebAssembly.Memory;
+	public wasmExports: WasmInitResult | null = null;
 
 	// Lifecycle Hooks for the Game Developer
 	public onContacts?: (contacts: Float32Array, count: number) => void;
@@ -34,7 +34,7 @@ export class ArcadiaEngine {
 			throw new Error("WASM Memory failed to initialize");
 
 		this.core = new mod.ArcadiaCore();
-		this.wasmMemory = exports.memory;
+		this.wasmExports = exports; // Store the live bindings object
 
 		// 2. Init Subsystems
 		await this.renderer.init(canvas);
@@ -55,15 +55,17 @@ export class ArcadiaEngine {
 		// Process Contacts
 		const cPtr = Number(this.core.get_contact_buffer_ptr());
 		const cLen = Number(this.core.get_contact_buffer_len());
+		const mem = this.wasmExports?.memory;
+		if (!mem) return; // If WASM memory is not ready, skip this tick
 		if (cLen > 0 && this.onContacts) {
-			const cView = new Float32Array(this.wasmMemory.buffer, cPtr, cLen);
+			const cView = new Float32Array(mem.buffer, cPtr, cLen);
 			this.onContacts(cView, cLen / 4); // Pass view and pair count
 		}
 
 		// Render
 		const rPtr = Number(this.core.get_render_buffer_ptr());
 		const rLen = Number(this.core.get_render_buffer_len());
-		const rView = new Float32Array(this.wasmMemory.buffer, rPtr, rLen);
+		const rView = new Float32Array(mem.buffer, rPtr, rLen);
 
 		// Compute camera in TS by reading the render buffer. If `playerId` is
 		// registered, find its Position and center the 800x600 viewport on it.
@@ -74,7 +76,11 @@ export class ArcadiaEngine {
 			for (let i = 0; i < entityCount; i++) {
 				const off = i * 5;
 				const entId = rView[off + 0];
-				if (typeof entId === "number" && this.playerId !== undefined && Math.trunc(entId) === Math.trunc(this.playerId)) {
+				if (
+					typeof entId === "number" &&
+					this.playerId !== undefined &&
+					Math.trunc(entId) === Math.trunc(this.playerId)
+				) {
 					const px = rView[off + 1];
 					const py = rView[off + 2];
 					if (typeof px === "number" && typeof py === "number") {
