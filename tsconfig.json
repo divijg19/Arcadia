@@ -26,6 +26,26 @@
 		// Some stricter flags (disabled by default)
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
-		"noPropertyAccessFromIndexSignature": false
-	}
+		"noPropertyAccessFromIndexSignature": false,
+		"paths": {
+			"arcadia-ts": [
+				"./packages/arcadia-ts/src"
+			],
+			"arcadia-ts/*": [
+				"./packages/arcadia-ts/src/*"
+			],
+			"arcadia-rs": [
+				"./packages/arcadia-rs"
+			],
+			"arcadia-rs/*": [
+				"./packages/arcadia-rs/*"
+			]
+		}
+	},
+	"include": [
+		"packages/**/*",
+		"projects/**/*",
+		"templates/**/*",
+		"types/**/*"
+	]
 }

@@ -60,14 +60,30 @@ lerna-debug.log*
 # -----------------------
 # 8) WASM / Rust build outputs
 # -----------------------
-# Ignore wasm-pack generated JS/WASM package (generated build artifact)
-arcadia-rs/pkg/
-# Rust target directories
-arcadia-rs/target/
-target/
+# Ignore wasm-pack generated `pkg/` directories (JS glue, .wasm, etc.).
+# We intentionally *do not* ignore committed declaration files or package.json in those
+# directories; those may be checked in for editor/type support.
+packages/*/pkg/
+!packages/*/pkg/*.d.ts
+!packages/*/pkg/package.json
+!packages/*/pkg/*.d.ts
+
+# Also ignore any crate-local `pkg/` output produced by wasm-pack
+**/pkg/
+
+# Rust target directories (build artifacts)
 **/target/
-# For library crates, Cargo.lock is optional; ignore arcadia-rs/Cargo.lock to avoid noise
-arcadia-rs/Cargo.lock
+
+# Ignore per-crate Cargo.lock files (keep top-level Cargo.lock if you use it)
+Cargo.lock
+**/Cargo.lock
+
+# If you have a specific engine crate named `arcadia-rs` keep an exception for
+# hand-maintained files in its pkg/ directory while ignoring generated files:
+arcadia-rs/pkg/
+!arcadia-rs/pkg/*.d.ts
+!arcadia-rs/pkg/package.json
+arcadia-rs/target/
 
 # -----------------------
 # 9) IDEs, editors and temp files

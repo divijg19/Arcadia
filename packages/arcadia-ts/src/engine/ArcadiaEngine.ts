@@ -25,13 +25,13 @@ export class ArcadiaEngine {
 
 	async init(canvas: HTMLCanvasElement) {
 		// 1. Init WASM
+		// The wasm JS glue is generated at build-time by wasm-pack and may
 		const mod = (await import(
-			"../../../arcadia-rs/pkg/arcadia_rs.js"
+			"arcadia-rs/pkg/arcadia_rs.js"
 		)) as unknown as WasmModule;
 		const exports =
 			mod && typeof mod.default === "function" ? await mod.default() : null;
-		if (!exports || !exports.memory)
-			throw new Error("WASM Memory failed to initialize");
+		if (!exports?.memory) throw new Error("WASM Memory failed to initialize");
 
 		this.core = new mod.ArcadiaCore();
 		this.wasmExports = exports; // Store the live bindings object
@@ -40,7 +40,7 @@ export class ArcadiaEngine {
 		await this.renderer.init(canvas);
 
 		// 3. Setup Loop
-		this.loop = new GameLoop((dt) => this.tick(dt));
+		this.loop = new GameLoop((dt: number) => this.tick(dt));
 	}
 
 	start() {

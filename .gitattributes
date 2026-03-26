@@ -1,2 +1,3 @@
 # .gitattributes
 templates/** linguist-vendored
+projects/** linguist-vendored
