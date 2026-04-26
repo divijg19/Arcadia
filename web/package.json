@@ -1,0 +1,47 @@
+{
+	"name": "web",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev --port 3000",
+		"build": "vite build",
+		"start": "node .output/server/index.mjs",
+		"preview": "vite preview",
+		"test": "vitest run",
+		"format": "biome format . --write",
+		"lint": "biome lint . --write",
+		"deploy": "bun run build && wrangler deploy"
+	},
+	"dependencies": {
+		"@cloudflare/vite-plugin": "^1.26.0",
+		"@fontsource/inter": "^5.1.1",
+		"@tailwindcss/vite": "^4.1.18",
+		"@tanstack/router-plugin": "^1.133.21",
+		"@tanstack/solid-form": "latest",
+		"@tanstack/solid-router": "latest",
+		"@tanstack/solid-router-devtools": "latest",
+		"@tanstack/solid-router-ssr-query": "latest",
+		"@tanstack/solid-start": "latest",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"solid-js": "^1.9.11",
+		"tailwind-merge": "^3.0.2",
+		"tailwindcss": "^4.1.18",
+		"tailwindcss-animate": "^1.0.7",
+		"vite-tsconfig-paths": "^5.1.4"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.5",
+		"@tanstack/devtools-vite": "latest",
+		"typescript": "^5.7.2",
+		"vite": "^7.3.1",
+		"vite-plugin-solid": "^2.11.10",
+		"wrangler": "^4.70.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"lightningcss"
+		]
+	}
+}
