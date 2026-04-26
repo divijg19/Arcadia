@@ -1,3 +1,4 @@
 # .gitattributes
 templates/** linguist-vendored
-projects/** linguist-vendored
+playground/** linguist-vendored
+web/** linguist-vendored
