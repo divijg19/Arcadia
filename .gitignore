@@ -1,36 +1,49 @@
 # Arcadia top-level .gitignore
 
 # -----------------------
-# 1) Operating System
+# Operating System
 # -----------------------
 .DS_Store
 Thumbs.db
 desktop.ini
 
 # -----------------------
-# 2) Node / Bun / JavaScript
+# Node / Bun / JavaScript
 # -----------------------
 node_modules/
 **/node_modules/
 # Keep lockfiles (bun.lock, package-lock.json, yarn.lock) committed for reproducible installs
 
 # -----------------------
-# 3) Build output
+# Build output
 # -----------------------
 dist/
 dist-ssr/
 out/
 build/
 *.tgz
+**/node_modules
+**/.DS_Store
+**/dist
+**/dist-ssr
+**/*.local
+**/.env
+**/.nitro
+**/.tanstack
+**/.wrangler
+**/.output
+**/.vinxi
+**/__unconfig*
+
 
 # -----------------------
-# 4) Coverage reports
+# Coverage reports
 # -----------------------
 coverage/
 *.lcov
 
 # -----------------------
-# 5) Logs
+# Logs
 # -----------------------
 logs/
 *.log
@@ -41,7 +54,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # -----------------------
-# 6) Environment
+# Environment
 # -----------------------
 .env
 .env.*.local
@@ -49,7 +62,7 @@ lerna-debug.log*
 *.local
 
 # -----------------------
-# 7) Tooling caches / intermediate files
+# Tooling caches / intermediate files
 # -----------------------
 .cache/
 .vite/
@@ -58,7 +71,7 @@ lerna-debug.log*
 *.tsbuildinfo
 
 # -----------------------
-# 8) WASM / Rust build outputs
+# WASM / Rust build outputs
 # -----------------------
 # Ignore wasm-pack generated `pkg/` directories (JS glue, .wasm, etc.).
 # We intentionally *do not* ignore committed declaration files or package.json in those
@@ -86,7 +99,7 @@ arcadia-rs/pkg/
 arcadia-rs/target/
 
 # -----------------------
-# 9) IDEs, editors and temp files
+# IDEs, editors and temp files
 # -----------------------
 # Keep shared editor files out of the repo but allow committed workspace extensions
 .vscode/*
@@ -104,6 +117,6 @@ arcadia-rs/target/
 *.sln
 
 # -----------------------
-# 10) Misc
+# Misc
 # -----------------------
 # (Add other machine-specific files below as needed)
