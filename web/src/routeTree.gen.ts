@@ -9,140 +9,104 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PortfolioRouteImport } from './routes/_portfolio'
-import { Route as OsRouteImport } from './routes/_os'
-import { Route as PortfolioIndexRouteImport } from './routes/_portfolio.index'
-import { Route as OsNexusRouteImport } from './routes/_os.nexus'
-import { Route as OsRuntimeGameIdRouteImport } from './routes/_os.runtime.$gameId'
+import { Route as SystemsRouteImport } from './routes/systems'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as EnginesRouteImport } from './routes/engines'
+import { Route as IndexRouteImport } from './routes/index'
 
-const PortfolioRoute = PortfolioRouteImport.update({
-  id: '/_portfolio',
+const SystemsRoute = SystemsRouteImport.update({
+  id: '/systems',
+  path: '/systems',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OsRoute = OsRouteImport.update({
-  id: '/_os',
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PortfolioIndexRoute = PortfolioIndexRouteImport.update({
+const EnginesRoute = EnginesRouteImport.update({
+  id: '/engines',
+  path: '/engines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PortfolioRoute,
-} as any)
-const OsNexusRoute = OsNexusRouteImport.update({
-  id: '/nexus',
-  path: '/nexus',
-  getParentRoute: () => OsRoute,
-} as any)
-const OsRuntimeGameIdRoute = OsRuntimeGameIdRouteImport.update({
-  id: '/runtime/$gameId',
-  path: '/runtime/$gameId',
-  getParentRoute: () => OsRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof PortfolioIndexRoute
-  '/nexus': typeof OsNexusRoute
-  '/runtime/$gameId': typeof OsRuntimeGameIdRoute
+  '/': typeof IndexRoute
+  '/engines': typeof EnginesRoute
+  '/games': typeof GamesRoute
+  '/systems': typeof SystemsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof PortfolioIndexRoute
-  '/nexus': typeof OsNexusRoute
-  '/runtime/$gameId': typeof OsRuntimeGameIdRoute
+  '/': typeof IndexRoute
+  '/engines': typeof EnginesRoute
+  '/games': typeof GamesRoute
+  '/systems': typeof SystemsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_os': typeof OsRouteWithChildren
-  '/_portfolio': typeof PortfolioRouteWithChildren
-  '/_os/nexus': typeof OsNexusRoute
-  '/_portfolio/': typeof PortfolioIndexRoute
-  '/_os/runtime/$gameId': typeof OsRuntimeGameIdRoute
+  '/': typeof IndexRoute
+  '/engines': typeof EnginesRoute
+  '/games': typeof GamesRoute
+  '/systems': typeof SystemsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/nexus' | '/runtime/$gameId'
+  fullPaths: '/' | '/engines' | '/games' | '/systems'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/nexus' | '/runtime/$gameId'
-  id:
-    | '__root__'
-    | '/_os'
-    | '/_portfolio'
-    | '/_os/nexus'
-    | '/_portfolio/'
-    | '/_os/runtime/$gameId'
+  to: '/' | '/engines' | '/games' | '/systems'
+  id: '__root__' | '/' | '/engines' | '/games' | '/systems'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  OsRoute: typeof OsRouteWithChildren
-  PortfolioRoute: typeof PortfolioRouteWithChildren
+  IndexRoute: typeof IndexRoute
+  EnginesRoute: typeof EnginesRoute
+  GamesRoute: typeof GamesRoute
+  SystemsRoute: typeof SystemsRoute
 }
 
 declare module '@tanstack/solid-router' {
   interface FileRoutesByPath {
-    '/_portfolio': {
-      id: '/_portfolio'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof PortfolioRouteImport
+    '/systems': {
+      id: '/systems'
+      path: '/systems'
+      fullPath: '/systems'
+      preLoaderRoute: typeof SystemsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_os': {
-      id: '/_os'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof OsRouteImport
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_portfolio/': {
-      id: '/_portfolio/'
+    '/engines': {
+      id: '/engines'
+      path: '/engines'
+      fullPath: '/engines'
+      preLoaderRoute: typeof EnginesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof PortfolioIndexRouteImport
-      parentRoute: typeof PortfolioRoute
-    }
-    '/_os/nexus': {
-      id: '/_os/nexus'
-      path: '/nexus'
-      fullPath: '/nexus'
-      preLoaderRoute: typeof OsNexusRouteImport
-      parentRoute: typeof OsRoute
-    }
-    '/_os/runtime/$gameId': {
-      id: '/_os/runtime/$gameId'
-      path: '/runtime/$gameId'
-      fullPath: '/runtime/$gameId'
-      preLoaderRoute: typeof OsRuntimeGameIdRouteImport
-      parentRoute: typeof OsRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface OsRouteChildren {
-  OsNexusRoute: typeof OsNexusRoute
-  OsRuntimeGameIdRoute: typeof OsRuntimeGameIdRoute
-}
-
-const OsRouteChildren: OsRouteChildren = {
-  OsNexusRoute: OsNexusRoute,
-  OsRuntimeGameIdRoute: OsRuntimeGameIdRoute,
-}
-
-const OsRouteWithChildren = OsRoute._addFileChildren(OsRouteChildren)
-
-interface PortfolioRouteChildren {
-  PortfolioIndexRoute: typeof PortfolioIndexRoute
-}
-
-const PortfolioRouteChildren: PortfolioRouteChildren = {
-  PortfolioIndexRoute: PortfolioIndexRoute,
-}
-
-const PortfolioRouteWithChildren = PortfolioRoute._addFileChildren(
-  PortfolioRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
-  OsRoute: OsRouteWithChildren,
-  PortfolioRoute: PortfolioRouteWithChildren,
+  IndexRoute: IndexRoute,
+  EnginesRoute: EnginesRoute,
+  GamesRoute: GamesRoute,
+  SystemsRoute: SystemsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

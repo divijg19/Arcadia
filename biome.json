@@ -9,15 +9,15 @@
 		"ignoreUnknown": true,
 		"includes": [
 			"**",
-			"!**/node_modules/**",
-			"!**/dist/**",
-			"!**/dist-ssr/**",
-			"!**/.output/**",
-			"!**/.wrangler/**",
-			"!**/coverage/**",
-			"!**/target/**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/dist-ssr",
+			"!**/.output",
+			"!**/.wrangler",
+			"!**/coverage",
+			"!**/target",
 			"!**/*.wasm",
-			"!packages/arcadia-rs/pkg/**"
+			"!packages/arcadia-rs/pkg"
 		]
 	},
 	"formatter": {
@@ -45,7 +45,9 @@
 	},
 	"overrides": [
 		{
-			"includes": ["packages/arcadia-rs/**"],
+			"includes": [
+				"web/src/routeTree.gen.ts"
+			],
 			"formatter": {
 				"enabled": false
 			},
@@ -57,7 +59,23 @@
 			}
 		},
 		{
-			"includes": ["web/**"],
+			"includes": [
+				"packages/arcadia-rs/**"
+			],
+			"formatter": {
+				"enabled": false
+			},
+			"linter": {
+				"enabled": false
+			},
+			"assist": {
+				"enabled": false
+			}
+		},
+		{
+			"includes": [
+				"web/**"
+			],
 			"formatter": {
 				"indentStyle": "tab"
 			}
