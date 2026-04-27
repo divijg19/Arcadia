@@ -1,20 +1,19 @@
 import {
+	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
 	Scripts,
-	createRootRouteWithContext,
 } from "@tanstack/solid-router";
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
-
-import { HydrationScript } from "solid-js/web";
 import { Suspense } from "solid-js";
-import { UniversalSaveProvider } from "~/state/UniversalSaveContext";
+import { HydrationScript } from "solid-js/web";
+import FloatingPillNav from "~/components/nav/FloatingPillNav";
 
 import styleCss from "../styles.css?url";
 
 export const Route = createRootRouteWithContext()({
 	head: () => ({
-		title: "Arcadia OS",
+		title: "Arcadia v1.5.5",
 		meta: [
 			{
 				name: "viewport",
@@ -31,7 +30,7 @@ export const Route = createRootRouteWithContext()({
 			},
 			{
 				rel: "stylesheet",
-				href: "https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap",
+				href: "https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap",
 			},
 			{
 				rel: "stylesheet",
@@ -51,9 +50,10 @@ function RootComponent() {
 			</head>
 			<body class="arcadia-body">
 				<Suspense>
-					<UniversalSaveProvider>
+					<FloatingPillNav />
+					<main class="site-frame">
 						<Outlet />
-					</UniversalSaveProvider>
+					</main>
 					<TanStackRouterDevtools />
 				</Suspense>
 				<Scripts />
