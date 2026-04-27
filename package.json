@@ -5,9 +5,11 @@
   "private": true,
   "workspaces": [
     "web",
-    "packages/*",
-    "playground/*",
-    "templates/*"
+    "packages/arcadia-ts",
+    "playground/astra-naught",
+    "playground/verdant-descent",
+    "playground/babylon-estate",
+    "templates"
   ],
   "overrides": {
     "typescript": "^6.0.3",
