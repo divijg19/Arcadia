@@ -5,13 +5,13 @@
 	"type": "module",
 	"main": "src/index.ts",
 	"dependencies": {
-		"pixi.js": "^8.17.1",
-		"solid-js": "^1.9.11"
+		"pixi.js": "^8.18.1",
+		"solid-js": "^1.9.12"
 	},
 	"devDependencies": {
-		"@types/node": "^25.5.0",
-		"typescript": "~6.0.2",
-		"vite": "^8.0.1",
-		"vite-plugin-solid": "^2.11.11"
+		"@types/node": "^25.6.0",
+		"typescript": "~6.0.3",
+		"vite": "^8.0.10",
+		"vite-plugin-solid": "^2.11.12"
 	}
 }
