@@ -6,7 +6,19 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!**/node_modules/**",
+			"!**/dist/**",
+			"!**/dist-ssr/**",
+			"!**/.output/**",
+			"!**/.wrangler/**",
+			"!**/coverage/**",
+			"!**/target/**",
+			"!**/*.wasm",
+			"!packages/arcadia-rs/pkg/**"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -30,5 +42,25 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["packages/arcadia-rs/**"],
+			"formatter": {
+				"enabled": false
+			},
+			"linter": {
+				"enabled": false
+			},
+			"assist": {
+				"enabled": false
+			}
+		},
+		{
+			"includes": ["web/**"],
+			"formatter": {
+				"indentStyle": "tab"
+			}
+		}
+	]
 }
