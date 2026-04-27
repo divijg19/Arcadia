@@ -1,102 +1,90 @@
-const browserGames = [
-	{
-		title: "Astra-Naught",
-		stack: "Arcadia | TypeScript + Rust",
-		description:
-			"Deterministic arena shooter loop with rapid iteration and replay-focused balancing.",
-		type: "Playable Browser Build",
-	},
-	{
-		title: "Verdant Descent",
-		stack: "Arcadia | TypeScript + Rust",
-		description:
-			"Procedural descent with mode-shifting combat, physics-driven hazards, and persistent state runs.",
-		type: "Playable Browser Build",
-	},
-	{
-		title: "Babylon Estate",
-		stack: "Arcadia | TypeScript + Rust",
-		description:
-			"Puzzle narrative scenes with responsive object interactions and compact WASM simulation.",
-		type: "Playable Browser Build",
-	},
-];
+import { For, createSignal } from "solid-js";
+import { cn } from "~/lib/utils";
 
-const nativeProjects = [
+const archiveEntries = [
 	{
+		id: "astra",
+		title: "Astra-Naught",
+		subtitle: "Arcadia // browser release",
+		washClass: "wash-astra",
+	},
+	{
+		id: "verdant",
+		title: "Verdant Descent",
+		subtitle: "Arcadia // browser release",
+		washClass: "wash-verdant",
+	},
+	{
+		id: "babylon",
+		title: "Babylon Estate",
+		subtitle: "Arcadia // browser release",
+		washClass: "wash-babylon",
+	},
+	{
+		id: "ashbinder",
 		title: "Ashbinder Tactics",
-		stack: "Gladiolus | Rust + Zig",
-		description:
-			"Heavy turn-based RPG prototype focused on deterministic combat simulation and mod-ready data pipelines.",
-		type: "Downloadable Build",
+		subtitle: "Gladiolus // downloadable build",
+		washClass: "wash-ashbinder",
 	},
 	{
+		id: "rookline",
 		title: "Rookline Siege",
-		stack: "Rust Native",
-		description:
-			"Systems-heavy combat sandbox stressing pathfinding throughput, replay traces, and load-safe saves.",
-		type: "Downloadable Build",
+		subtitle: "Rust native // downloadable build",
+		washClass: "wash-rookline",
 	},
 	{
-		title: "Terminal Front",
-		stack: "Go TUI",
-		description:
-			"Command-line tactical game exploring dense state transitions and deterministic ASCII battlefields.",
-		type: "Open Source Release",
-	},
-	{
+		id: "moonwake",
 		title: "Moonwake Scripts",
-		stack: "Lunaria | Lua",
-		description:
-			"Scripted micro-game collection proving fast mechanic prototyping for windowed desktop experiments.",
-		type: "Prototype Collection",
+		subtitle: "Lunaria // prototype collection",
+		washClass: "wash-moonwake",
 	},
-];
+] as const;
 
 export default function GamesEditorial() {
+	const [activeId, setActiveId] = createSignal<
+		(typeof archiveEntries)[number]["id"] | null
+	>(null);
+
 	return (
-		<main class="editorial-page">
-			<section class="editorial-hero">
-				<p class="editorial-kicker">Games</p>
-				<h1>Playable Releases And Tactical Prototypes</h1>
-				<p>
-					A complete catalog spanning browser-native Arcadia releases and
-					heavier native projects built for deeper campaign loops.
+		<main class="atelier-page games-archive-page">
+			<div class="games-archive-backdrop" aria-hidden="true">
+				<For each={archiveEntries}>
+					{(entry) => (
+						<div
+							class={cn(
+								"game-wash",
+								entry.washClass,
+								activeId() === entry.id && "is-active",
+							)}
+						/>
+					)}
+				</For>
+			</div>
+
+			<section class="games-archive-content">
+				<p class="games-archive-meta">
+					interactive archive | hover any title to reveal its cinematic plate
 				</p>
-			</section>
-
-			<section class="editorial-section">
-				<header>
-					<p class="editorial-subkicker">Browser Catalog</p>
-					<h2>Instant-Play Arcadia Builds</h2>
-				</header>
-				<div class="editorial-flow-cards">
-					{browserGames.map((project) => (
-						<article class="editorial-card">
-							<p class="card-tag">{project.type}</p>
-							<h3>{project.title}</h3>
-							<p class="card-stack">{project.stack}</p>
-							<p>{project.description}</p>
-						</article>
-					))}
-				</div>
-			</section>
-
-			<section class="editorial-section">
-				<header>
-					<p class="editorial-subkicker">Native And Downloadable</p>
-					<h2>Long-Form Game Engineering Work</h2>
-				</header>
-				<div class="editorial-flow-cards dense">
-					{nativeProjects.map((project) => (
-						<article class="editorial-card">
-							<p class="card-tag">{project.type}</p>
-							<h3>{project.title}</h3>
-							<p class="card-stack">{project.stack}</p>
-							<p>{project.description}</p>
-						</article>
-					))}
-				</div>
+				<ul class="games-title-list">
+					<For each={archiveEntries}>
+						{(entry, index) => {
+							return (
+								<li class="games-title-row">
+									<button
+										type="button"
+										class="games-title-button"
+										onMouseEnter={() => setActiveId(entry.id)}
+										onFocus={() => setActiveId(entry.id)}
+									>
+										<span class="games-title-index">{index() + 1}.</span>
+										<span class="games-title-text">{entry.title}</span>
+										<span class="games-title-subtitle">{entry.subtitle}</span>
+									</button>
+								</li>
+							);
+						}}
+					</For>
+				</ul>
 			</section>
 		</main>
 	);

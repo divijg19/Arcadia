@@ -1,50 +1,45 @@
-const systemTracks = [
+const deskEntries = [
 	{
-		title: "Deterministic Simulation Loops",
+		title: "Scheduler Discipline",
+		meta: "Rust / Frame Law",
 		content:
-			"Rust-backed update cycles, strict frame budgets, and reproducible state transitions designed for replayability and competitive balance analysis.",
-		language: "Rust + TypeScript",
+			"Every simulation circuit begins with a deterministic scheduler contract: immutable input batch, strict update ordering, and canonical state serialization. This lets replay traces become legal artifacts rather than best-effort recordings.",
 	},
 	{
-		title: "Runtime Orchestration",
+		title: "Bridge Surfaces",
+		meta: "TS Host / WASM Core",
 		content:
-			"Clear separation between simulation, rendering, and I/O with testable adapters for browser, terminal, and native execution paths.",
-		language: "TypeScript + Go",
+			"The browser host is intentionally thin. It binds IO, audio, and rendering while Rust protects systemic truth. The bridge is narrow enough to reason about in one sitting, which keeps debugging humane even under aggressive iteration cadence.",
 	},
 	{
-		title: "Data-Driven Combat Infrastructure",
+		title: "Telemetry Ethics",
+		meta: "Go Tooling / Trace Atlas",
 		content:
-			"Schema-oriented move definitions, content hooks, and script injection points that keep balancing workflows fast for designers.",
-		language: "Rust + Lua",
+			"Metrics are gathered as design instruments, not vanity dashboards. Frame spikes, memory churn, and contact saturation are charted against authored encounters so balancing remains rooted in player feeling and measurable system pressure.",
 	},
-	{
-		title: "Profiling And Performance Telemetry",
-		content:
-			"In-engine diagnostics focused on frame pacing, contact throughput, and memory lifetime to catch regressions before shipping.",
-		language: "Go + Rust",
-	},
-];
+] as const;
+
+const asciiSchematic = `┌────────────── deterministic loop ──────────────┐
+│ input batch -> ecs update -> contact resolve   │
+│      -> snapshot emit -> host render sync      │
+└──────────────────────────────┬─────────────────┘
+                               │
+                     trace + telemetry stream`;
 
 export default function SystemsEditorial() {
 	return (
-		<main class="editorial-page">
-			<section class="editorial-hero">
-				<p class="editorial-kicker">Systems</p>
-				<h1>Architecture Tracks Across Browser, Native, And TUI</h1>
-				<p>
-					A systems-first engineering approach where each language targets a
-					specific execution model and performance responsibility.
-				</p>
-			</section>
+		<main class="atelier-page systems-desk-page">
+			<section class="systems-desk-wrap">
+				<p class="systems-kicker">systems | engineer's desk</p>
+				<h1 class="systems-title">Monochrome Notes On Runtime Truth</h1>
 
-			<section class="editorial-section timeline">
-				{systemTracks.map((track, index) => (
-					<article class="timeline-row" style={{ "--row-index": `${index}` }}>
-						<p class="timeline-language">{track.language}</p>
-						<div class="timeline-content">
-							<h2>{track.title}</h2>
-							<p>{track.content}</p>
-						</div>
+				<pre class="systems-ascii">{asciiSchematic}</pre>
+
+				{deskEntries.map((entry) => (
+					<article class="systems-entry">
+						<p class="meta">{entry.meta}</p>
+						<h2>{entry.title}</h2>
+						<p>{entry.content}</p>
 					</article>
 				))}
 			</section>

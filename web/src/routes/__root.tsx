@@ -7,13 +7,14 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
 import { Suspense } from "solid-js";
 import { HydrationScript } from "solid-js/web";
+import CinematicCursor from "~/components/effects/CinematicCursor";
 import Navbar from "~/components/nav/FloatingPillNav";
 
-import styleCss from "../styles.css?url";
+import indexCss from "../index.css?url";
 
 export const Route = createRootRouteWithContext()({
 	head: () => ({
-		title: "Arcadia v1.5.5",
+		title: "Arcadia v1.6.2 // Digital Atelier",
 		meta: [
 			{
 				name: "viewport",
@@ -21,7 +22,7 @@ export const Route = createRootRouteWithContext()({
 			},
 		],
 		links: [
-			{ rel: "stylesheet", href: styleCss },
+			{ rel: "stylesheet", href: indexCss },
 			{ rel: "preconnect", href: "https://fonts.googleapis.com" },
 			{
 				rel: "preconnect",
@@ -30,11 +31,7 @@ export const Route = createRootRouteWithContext()({
 			},
 			{
 				rel: "stylesheet",
-				href: "https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap",
-			},
-			{
-				rel: "stylesheet",
-				href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap",
+				href: "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap",
 			},
 		],
 	}),
@@ -51,6 +48,7 @@ function RootComponent() {
 			<body class="arcadia-body">
 				<Suspense>
 					<Navbar />
+					<CinematicCursor />
 					<main class="site-frame">
 						<Outlet />
 					</main>
