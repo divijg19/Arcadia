@@ -7,7 +7,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
 import { Suspense } from "solid-js";
 import { HydrationScript } from "solid-js/web";
-import FloatingPillNav from "~/components/nav/FloatingPillNav";
+import Navbar from "~/components/nav/FloatingPillNav";
 
 import styleCss from "../styles.css?url";
 
@@ -50,7 +50,7 @@ function RootComponent() {
 			</head>
 			<body class="arcadia-body">
 				<Suspense>
-					<FloatingPillNav />
+					<Navbar />
 					<main class="site-frame">
 						<Outlet />
 					</main>
