@@ -13,35 +13,28 @@
 		"deploy": "bun run build && wrangler deploy"
 	},
 	"dependencies": {
-		"@cloudflare/vite-plugin": "^1.26.0",
-		"@fontsource/inter": "^5.1.1",
-		"@tailwindcss/vite": "^4.1.18",
-		"@tanstack/router-plugin": "^1.133.21",
-		"@tanstack/solid-form": "latest",
-		"@tanstack/solid-router": "latest",
-		"@tanstack/solid-router-devtools": "latest",
-		"@tanstack/solid-router-ssr-query": "latest",
-		"@tanstack/solid-start": "latest",
+		"@cloudflare/vite-plugin": "^1.33.2",
+		"@fontsource/inter": "^5.2.8",
+		"@tailwindcss/vite": "^4.2.4",
+		"@tanstack/router-plugin": "^1.167.27",
+		"@tanstack/solid-form": "^1.29.1",
+		"@tanstack/solid-router": "^1.168.24",
+		"@tanstack/solid-router-devtools": "^1.166.13",
+		"@tanstack/solid-router-ssr-query": "^1.166.12",
+		"@tanstack/solid-start": "^1.167.47",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"solid-js": "^1.9.11",
-		"tailwind-merge": "^3.0.2",
-		"tailwindcss": "^4.1.18",
-		"tailwindcss-animate": "^1.0.7",
-		"vite-tsconfig-paths": "^5.1.4"
+		"solid-js": "^1.9.12",
+		"tailwind-merge": "^3.5.0",
+		"tailwindcss": "^4.2.4",
+		"tailwindcss-animate": "^1.0.7"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.5",
-		"@tanstack/devtools-vite": "latest",
-		"typescript": "^5.7.2",
-		"vite": "^7.3.1",
-		"vite-plugin-solid": "^2.11.10",
-		"wrangler": "^4.70.0"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"lightningcss"
-		]
+		"@biomejs/biome": "^2.4.13",
+		"@tanstack/devtools-vite": "^0.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.10",
+		"vite-plugin-solid": "^2.11.12",
+		"wrangler": "^4.85.0"
 	}
 }
