@@ -8,151 +8,151 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as PortfolioRouteImport } from "./routes/_portfolio";
-import { Route as OsRouteImport } from "./routes/_os";
-import { Route as PortfolioIndexRouteImport } from "./routes/_portfolio.index";
-import { Route as OsNexusRouteImport } from "./routes/_os.nexus";
-import { Route as OsRuntimeGameIdRouteImport } from "./routes/_os.runtime.$gameId";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as PortfolioRouteImport } from './routes/_portfolio'
+import { Route as OsRouteImport } from './routes/_os'
+import { Route as PortfolioIndexRouteImport } from './routes/_portfolio.index'
+import { Route as OsNexusRouteImport } from './routes/_os.nexus'
+import { Route as OsRuntimeGameIdRouteImport } from './routes/_os.runtime.$gameId'
 
 const PortfolioRoute = PortfolioRouteImport.update({
-	id: "/_portfolio",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/_portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OsRoute = OsRouteImport.update({
-	id: "/_os",
-	getParentRoute: () => rootRouteImport,
-} as any);
+  id: '/_os',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortfolioIndexRoute = PortfolioIndexRouteImport.update({
-	id: "/",
-	path: "/",
-	getParentRoute: () => PortfolioRoute,
-} as any);
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortfolioRoute,
+} as any)
 const OsNexusRoute = OsNexusRouteImport.update({
-	id: "/nexus",
-	path: "/nexus",
-	getParentRoute: () => OsRoute,
-} as any);
+  id: '/nexus',
+  path: '/nexus',
+  getParentRoute: () => OsRoute,
+} as any)
 const OsRuntimeGameIdRoute = OsRuntimeGameIdRouteImport.update({
-	id: "/runtime/$gameId",
-	path: "/runtime/$gameId",
-	getParentRoute: () => OsRoute,
-} as any);
+  id: '/runtime/$gameId',
+  path: '/runtime/$gameId',
+  getParentRoute: () => OsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-	"/": typeof PortfolioIndexRoute;
-	"/nexus": typeof OsNexusRoute;
-	"/runtime/$gameId": typeof OsRuntimeGameIdRoute;
+  '/': typeof PortfolioIndexRoute
+  '/nexus': typeof OsNexusRoute
+  '/runtime/$gameId': typeof OsRuntimeGameIdRoute
 }
 export interface FileRoutesByTo {
-	"/": typeof PortfolioIndexRoute;
-	"/nexus": typeof OsNexusRoute;
-	"/runtime/$gameId": typeof OsRuntimeGameIdRoute;
+  '/': typeof PortfolioIndexRoute
+  '/nexus': typeof OsNexusRoute
+  '/runtime/$gameId': typeof OsRuntimeGameIdRoute
 }
 export interface FileRoutesById {
-	__root__: typeof rootRouteImport;
-	"/_os": typeof OsRouteWithChildren;
-	"/_portfolio": typeof PortfolioRouteWithChildren;
-	"/_os/nexus": typeof OsNexusRoute;
-	"/_portfolio/": typeof PortfolioIndexRoute;
-	"/_os/runtime/$gameId": typeof OsRuntimeGameIdRoute;
+  __root__: typeof rootRouteImport
+  '/_os': typeof OsRouteWithChildren
+  '/_portfolio': typeof PortfolioRouteWithChildren
+  '/_os/nexus': typeof OsNexusRoute
+  '/_portfolio/': typeof PortfolioIndexRoute
+  '/_os/runtime/$gameId': typeof OsRuntimeGameIdRoute
 }
 export interface FileRouteTypes {
-	fileRoutesByFullPath: FileRoutesByFullPath;
-	fullPaths: "/" | "/nexus" | "/runtime/$gameId";
-	fileRoutesByTo: FileRoutesByTo;
-	to: "/" | "/nexus" | "/runtime/$gameId";
-	id:
-		| "__root__"
-		| "/_os"
-		| "/_portfolio"
-		| "/_os/nexus"
-		| "/_portfolio/"
-		| "/_os/runtime/$gameId";
-	fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/nexus' | '/runtime/$gameId'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/nexus' | '/runtime/$gameId'
+  id:
+    | '__root__'
+    | '/_os'
+    | '/_portfolio'
+    | '/_os/nexus'
+    | '/_portfolio/'
+    | '/_os/runtime/$gameId'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-	OsRoute: typeof OsRouteWithChildren;
-	PortfolioRoute: typeof PortfolioRouteWithChildren;
+  OsRoute: typeof OsRouteWithChildren
+  PortfolioRoute: typeof PortfolioRouteWithChildren
 }
 
-declare module "@tanstack/solid-router" {
-	interface FileRoutesByPath {
-		"/_portfolio": {
-			id: "/_portfolio";
-			path: "";
-			fullPath: "/";
-			preLoaderRoute: typeof PortfolioRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/_os": {
-			id: "/_os";
-			path: "";
-			fullPath: "/";
-			preLoaderRoute: typeof OsRouteImport;
-			parentRoute: typeof rootRouteImport;
-		};
-		"/_portfolio/": {
-			id: "/_portfolio/";
-			path: "/";
-			fullPath: "/";
-			preLoaderRoute: typeof PortfolioIndexRouteImport;
-			parentRoute: typeof PortfolioRoute;
-		};
-		"/_os/nexus": {
-			id: "/_os/nexus";
-			path: "/nexus";
-			fullPath: "/nexus";
-			preLoaderRoute: typeof OsNexusRouteImport;
-			parentRoute: typeof OsRoute;
-		};
-		"/_os/runtime/$gameId": {
-			id: "/_os/runtime/$gameId";
-			path: "/runtime/$gameId";
-			fullPath: "/runtime/$gameId";
-			preLoaderRoute: typeof OsRuntimeGameIdRouteImport;
-			parentRoute: typeof OsRoute;
-		};
-	}
+declare module '@tanstack/solid-router' {
+  interface FileRoutesByPath {
+    '/_portfolio': {
+      id: '/_portfolio'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_os': {
+      id: '/_os'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof OsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_portfolio/': {
+      id: '/_portfolio/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof PortfolioIndexRouteImport
+      parentRoute: typeof PortfolioRoute
+    }
+    '/_os/nexus': {
+      id: '/_os/nexus'
+      path: '/nexus'
+      fullPath: '/nexus'
+      preLoaderRoute: typeof OsNexusRouteImport
+      parentRoute: typeof OsRoute
+    }
+    '/_os/runtime/$gameId': {
+      id: '/_os/runtime/$gameId'
+      path: '/runtime/$gameId'
+      fullPath: '/runtime/$gameId'
+      preLoaderRoute: typeof OsRuntimeGameIdRouteImport
+      parentRoute: typeof OsRoute
+    }
+  }
 }
 
 interface OsRouteChildren {
-	OsNexusRoute: typeof OsNexusRoute;
-	OsRuntimeGameIdRoute: typeof OsRuntimeGameIdRoute;
+  OsNexusRoute: typeof OsNexusRoute
+  OsRuntimeGameIdRoute: typeof OsRuntimeGameIdRoute
 }
 
 const OsRouteChildren: OsRouteChildren = {
-	OsNexusRoute: OsNexusRoute,
-	OsRuntimeGameIdRoute: OsRuntimeGameIdRoute,
-};
+  OsNexusRoute: OsNexusRoute,
+  OsRuntimeGameIdRoute: OsRuntimeGameIdRoute,
+}
 
-const OsRouteWithChildren = OsRoute._addFileChildren(OsRouteChildren);
+const OsRouteWithChildren = OsRoute._addFileChildren(OsRouteChildren)
 
 interface PortfolioRouteChildren {
-	PortfolioIndexRoute: typeof PortfolioIndexRoute;
+  PortfolioIndexRoute: typeof PortfolioIndexRoute
 }
 
 const PortfolioRouteChildren: PortfolioRouteChildren = {
-	PortfolioIndexRoute: PortfolioIndexRoute,
-};
+  PortfolioIndexRoute: PortfolioIndexRoute,
+}
 
 const PortfolioRouteWithChildren = PortfolioRoute._addFileChildren(
-	PortfolioRouteChildren,
-);
+  PortfolioRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
-	OsRoute: OsRouteWithChildren,
-	PortfolioRoute: PortfolioRouteWithChildren,
-};
+  OsRoute: OsRouteWithChildren,
+  PortfolioRoute: PortfolioRouteWithChildren,
+}
 export const routeTree = rootRouteImport
-	._addFileChildren(rootRouteChildren)
-	._addFileTypes<FileRouteTypes>();
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { createStart } from "@tanstack/solid-start";
-declare module "@tanstack/solid-start" {
-	interface Register {
-		ssr: true;
-		router: Awaited<ReturnType<typeof getRouter>>;
-	}
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/solid-start'
+declare module '@tanstack/solid-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
 }
