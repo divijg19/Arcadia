@@ -2,62 +2,111 @@ import { onCleanup, onMount } from "solid-js";
 
 export default function CinematicCursor() {
 	let dotRef: HTMLDivElement | undefined;
-	let ringRef: HTMLDivElement | undefined;
 
 	onMount(() => {
 		if (!window.matchMedia("(pointer: fine)").matches) return;
-		if (!dotRef || !ringRef) return;
+		if (!dotRef) return;
+
+		const cursor = dotRef;
+		const halfSize = 3;
+		const epsilon = 0.01;
+		const springFar = 0.28;
+		const springNear = 0.16;
+		const supportsRawUpdate = "onpointerrawupdate" in window;
 
 		let rafId = 0;
-		let targetX = window.innerWidth * 0.5;
-		let targetY = window.innerHeight * 0.5;
-		let dotX = targetX;
-		let dotY = targetY;
-		let ringX = targetX;
-		let ringY = targetY;
+		let isRunning = false;
+		let currentX = window.innerWidth * 0.5;
+		let currentY = window.innerHeight * 0.5;
+		let targetX = currentX;
+		let targetY = currentY;
+
+		const setPosition = (x: number, y: number) => {
+			cursor.style.transform = `translate3d(${x - halfSize}px, ${y - halfSize}px, 0)`;
+		};
+
+		const snapToTarget = () => {
+			currentX = targetX;
+			currentY = targetY;
+			setPosition(currentX, currentY);
+		};
 
 		const render = () => {
-			dotX = targetX;
-			dotY = targetY;
-			ringX += (targetX - ringX) * 0.14;
-			ringY += (targetY - ringY) * 0.14;
+			const deltaX = targetX - currentX;
+			const deltaY = targetY - currentY;
+			const distance = Math.hypot(deltaX, deltaY);
+			const spring = distance > 120 ? springFar : springNear;
 
-			dotRef.style.transform = `translate3d(${dotX - 2}px, ${dotY - 2}px, 0)`;
-			ringRef.style.transform = `translate3d(${ringX - 15}px, ${ringY - 15}px, 0)`;
+			currentX += deltaX * spring;
+			currentY += deltaY * spring;
+			setPosition(currentX, currentY);
+
+			if (
+				Math.abs(targetX - currentX) < epsilon &&
+				Math.abs(targetY - currentY) < epsilon
+			) {
+				snapToTarget();
+				isRunning = false;
+				rafId = 0;
+				return;
+			}
+
 			rafId = window.requestAnimationFrame(render);
+		};
+
+		const start = () => {
+			if (isRunning) return;
+			isRunning = true;
+			rafId = window.requestAnimationFrame(render);
+		};
+
+		const stop = () => {
+			isRunning = false;
+			if (rafId) {
+				window.cancelAnimationFrame(rafId);
+				rafId = 0;
+			}
 		};
 
 		const handlePointerMove = (event: PointerEvent) => {
 			targetX = event.clientX;
 			targetY = event.clientY;
-			dotRef.style.opacity = "1";
-			ringRef.style.opacity = "1";
+			if (!isRunning) {
+				snapToTarget();
+			}
+			start();
+			cursor.style.opacity = "1";
 		};
 
 		const handlePointerLeave = () => {
-			dotRef.style.opacity = "0";
-			ringRef.style.opacity = "0";
+			cursor.style.opacity = "0";
+			stop();
 		};
 
-		dotRef.style.opacity = "0";
-		ringRef.style.opacity = "0";
-		rafId = window.requestAnimationFrame(render);
-		window.addEventListener("mousemove", handlePointerMove, {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "hidden") {
+				handlePointerLeave();
+			}
+		};
+
+		setPosition(currentX, currentY);
+		cursor.style.opacity = "0";
+		const moveEvent = supportsRawUpdate ? "pointerrawupdate" : "pointermove";
+		window.addEventListener(moveEvent, handlePointerMove as EventListener, {
 			passive: true,
 		});
 		window.addEventListener("mouseleave", handlePointerLeave);
+		window.addEventListener("blur", handlePointerLeave);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
 
 		onCleanup(() => {
-			window.cancelAnimationFrame(rafId);
-			window.removeEventListener("mousemove", handlePointerMove);
+			stop();
+			window.removeEventListener(moveEvent, handlePointerMove as EventListener);
 			window.removeEventListener("mouseleave", handlePointerLeave);
+			window.removeEventListener("blur", handlePointerLeave);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		});
 	});
 
-	return (
-		<div class="atelier-cursor" aria-hidden="true">
-			<div ref={ringRef} class="atelier-cursor-ring" />
-			<div ref={dotRef} class="atelier-cursor-dot" />
-		</div>
-	);
+	return <div ref={dotRef} class="atelier-cursor" aria-hidden="true" />;
 }

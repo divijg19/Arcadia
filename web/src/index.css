@@ -793,20 +793,16 @@
 	position: fixed;
 	left: 0;
 	top: 0;
-	width: 10px;
-	height: 10px;
+	width: 6px;
+	height: 6px;
 	border-radius: 999px;
 	background: #ffffff;
-	mix-blend-mode: difference;
+	mix-blend-mode: normal;
 	pointer-events: none;
-	z-index: 60;
+	z-index: 9999;
 	opacity: 0;
 	transform: translate3d(-20px, -20px, 0);
-	transition: opacity 140ms var(--snappy);
-}
-
-.atelier-cursor[data-visible="true"] {
-	opacity: 0.92;
+	will-change: transform, opacity;
 }
 
 /* v1.6.4 atelier surfaces */
@@ -1231,46 +1227,6 @@
 .engines-panel-notes {
 	display: grid;
 	gap: 0.35rem;
-}
-
-.atelier-cursor {
-	position: fixed;
-	left: 0;
-	top: 0;
-	width: 30px;
-	height: 30px;
-	pointer-events: none;
-	z-index: 60;
-	will-change: transform;
-	opacity: 1;
-	mix-blend-mode: normal;
-}
-
-.atelier-cursor-dot,
-.atelier-cursor-ring {
-	position: absolute;
-	left: 0;
-	top: 0;
-	will-change: transform, opacity;
-}
-
-.atelier-cursor-dot {
-	width: 4px;
-	height: 4px;
-	border-radius: 999px;
-	background: #ffffff;
-	box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-	transform: translate3d(13px, 13px, 0);
-}
-
-.atelier-cursor-ring {
-	width: 30px;
-	height: 30px;
-	border-radius: 999px;
-	border: 1px solid rgba(255, 255, 255, 0.38);
-	background: rgba(255, 255, 255, 0.03);
-	opacity: 0.9;
-	transition: transform 120ms var(--spring), opacity 160ms var(--snappy);
 }
 
 @media (max-width: 1100px) {

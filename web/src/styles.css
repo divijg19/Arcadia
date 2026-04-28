@@ -42,21 +42,9 @@
 	body {
 		margin: 0;
 		background:
-			radial-gradient(
-				circle at 8% 12%,
-				var(--bg-radial-1),
-				transparent 38%
-			),
-			radial-gradient(
-				circle at 88% 4%,
-				var(--bg-radial-2),
-				transparent 34%
-			),
-			radial-gradient(
-				circle at 42% 86%,
-				var(--bg-radial-3),
-				transparent 38%
-			),
+			radial-gradient(circle at 8% 12%, var(--bg-radial-1), transparent 38%),
+			radial-gradient(circle at 88% 4%, var(--bg-radial-2), transparent 34%),
+			radial-gradient(circle at 42% 86%, var(--bg-radial-3), transparent 38%),
 			var(--bg);
 		color: var(--text);
 		font-family: var(--font-ui);
@@ -277,7 +265,6 @@
 	filter: saturate(108%);
 	color: #ffffff;
 }
-
 
 .mobile-menu-toggle:hover {
 	transform: translateY(-1px);
