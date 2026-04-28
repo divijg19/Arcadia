@@ -9,16 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SystemsRouteImport } from './routes/systems'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as EnginesRouteImport } from './routes/engines'
 import { Route as IndexRouteImport } from './routes/index'
 
-const SystemsRoute = SystemsRouteImport.update({
-  id: '/systems',
-  path: '/systems',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GamesRoute = GamesRouteImport.update({
   id: '/games',
   path: '/games',
@@ -39,45 +33,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/engines': typeof EnginesRoute
   '/games': typeof GamesRoute
-  '/systems': typeof SystemsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/engines': typeof EnginesRoute
   '/games': typeof GamesRoute
-  '/systems': typeof SystemsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/engines': typeof EnginesRoute
   '/games': typeof GamesRoute
-  '/systems': typeof SystemsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/engines' | '/games' | '/systems'
+  fullPaths: '/' | '/engines' | '/games'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/engines' | '/games' | '/systems'
-  id: '__root__' | '/' | '/engines' | '/games' | '/systems'
+  to: '/' | '/engines' | '/games'
+  id: '__root__' | '/' | '/engines' | '/games'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EnginesRoute: typeof EnginesRoute
   GamesRoute: typeof GamesRoute
-  SystemsRoute: typeof SystemsRoute
 }
 
 declare module '@tanstack/solid-router' {
   interface FileRoutesByPath {
-    '/systems': {
-      id: '/systems'
-      path: '/systems'
-      fullPath: '/systems'
-      preLoaderRoute: typeof SystemsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/games': {
       id: '/games'
       path: '/games'
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EnginesRoute: EnginesRoute,
   GamesRoute: GamesRoute,
-  SystemsRoute: SystemsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
