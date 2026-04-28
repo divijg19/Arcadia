@@ -1,85 +1,126 @@
-import { For, createSignal } from "solid-js";
+import { For, createMemo, createSignal } from "solid-js";
 import { cn } from "~/lib/utils";
 
-const archiveEntries = [
+const games = [
 	{
 		id: "astra",
+		number: "01",
 		title: "Astra-Naught",
-		subtitle: "Arcadia // browser release",
+		stack: "[ RUST / WASM ]",
+		action: "LAUNCH",
+		copy: "Arena survival tuned for precise inputs, replayable runs, and a rapid browser deployment loop.",
 		washClass: "wash-astra",
 	},
 	{
 		id: "verdant",
+		number: "02",
 		title: "Verdant Descent",
-		subtitle: "Arcadia // browser release",
+		stack: "[ GO / WEB TOOLS ]",
+		action: "VIEW",
+		copy: "Procedural depth and persistent progression rendered as a moody descent through shifting systems.",
 		washClass: "wash-verdant",
 	},
 	{
 		id: "babylon",
+		number: "03",
 		title: "Babylon Estate",
-		subtitle: "Arcadia // browser release",
+		stack: "[ LUA / NARRATIVE ]",
+		action: "VIEW",
+		copy: "An atmospheric puzzle estate where object logic, story pacing, and tactile discovery remain legible.",
 		washClass: "wash-babylon",
 	},
 	{
 		id: "ashbinder",
+		number: "04",
 		title: "Ashbinder Tactics",
-		subtitle: "Gladiolus // downloadable build",
+		stack: "[ RUST / ZIG ]",
+		action: "LAUNCH",
+		copy: "A heavier tactical build with deterministic combat, mod-ready content, and native toolchain depth.",
 		washClass: "wash-ashbinder",
 	},
 	{
 		id: "rookline",
+		number: "05",
 		title: "Rookline Siege",
-		subtitle: "Rust native // downloadable build",
+		stack: "[ RUST NATIVE ]",
+		action: "VIEW",
+		copy: "A systems-heavy siege prototype shaped for longer reads, sharper simulations, and native throughput.",
 		washClass: "wash-rookline",
 	},
 	{
 		id: "moonwake",
+		number: "06",
 		title: "Moonwake Scripts",
-		subtitle: "Lunaria // prototype collection",
+		stack: "[ LUA ]",
+		action: "VIEW",
+		copy: "A script-native collection for fast mechanic sketching and quiet experimental releases.",
 		washClass: "wash-moonwake",
 	},
 ] as const;
 
 export default function GamesEditorial() {
-	const [activeId, setActiveId] = createSignal<
-		(typeof archiveEntries)[number]["id"] | null
-	>(null);
+	const [activeId, setActiveId] = createSignal<string | null>(null);
+	const activeGame = createMemo(
+		() => games.find((entry) => entry.id === activeId()) ?? null,
+	);
 
 	return (
-		<main class="atelier-page games-archive-page">
-			<div class="games-archive-backdrop" aria-hidden="true">
-				<For each={archiveEntries}>
+		<main class="atelier-page games-launcher-page">
+			<div class="games-launcher-backdrop" aria-hidden="true">
+				<For each={games}>
 					{(entry) => (
 						<div
 							class={cn(
-								"game-wash",
+								"games-wash",
 								entry.washClass,
-								activeId() === entry.id && "is-active",
+								activeGame()?.id === entry.id && "is-active",
 							)}
 						/>
 					)}
 				</For>
 			</div>
 
-			<section class="games-archive-content">
-				<p class="games-archive-meta">
-					interactive archive | hover any title to reveal its cinematic plate
-				</p>
-				<ul class="games-title-list">
-					<For each={archiveEntries}>
-						{(entry, index) => {
+			<section class="games-launcher-content">
+				<header class="games-launcher-head">
+					<p class="type-math">interactive archive</p>
+					<h1 class="type-soul">Play-Ready Releases</h1>
+					<p class="games-launcher-intro">
+						Hover or focus a title to crossfade the atmosphere and reveal an
+						immediate launch panel.
+					</p>
+				</header>
+
+				<ul class="games-launcher-list">
+					<For each={games}>
+						{(entry) => {
+							const isActive = createMemo(() => activeId() === entry.id);
+
 							return (
-								<li class="games-title-row">
-									<button
-										type="button"
-										class="games-title-button"
-										onMouseEnter={() => setActiveId(entry.id)}
-										onFocus={() => setActiveId(entry.id)}
-									>
-										<span class="games-title-index">{index() + 1}.</span>
-										<span class="games-title-text">{entry.title}</span>
-										<span class="games-title-subtitle">{entry.subtitle}</span>
-									</button>
+								<li class={cn("games-launcher-row", isActive() && "is-active")}>
+									<div class="games-launcher-button">
+										<button
+											type="button"
+											class="games-launcher-title-button"
+											onMouseEnter={() => setActiveId(entry.id)}
+											onFocus={() => setActiveId(entry.id)}
+											onBlur={() => setActiveId(null)}
+											onMouseLeave={() => setActiveId(null)}
+										>
+											<span class="games-launcher-index">{entry.number}</span>
+											<span class="games-launcher-title">{entry.title}</span>
+										</button>
+
+										<aside
+											class="games-control-panel"
+											aria-hidden={!isActive()}
+										>
+											<p class="games-panel-stack">{entry.stack}</p>
+											<p class="games-panel-copy">{entry.copy}</p>
+											<button type="button" class="games-panel-action">
+												{entry.action}
+											</button>
+										</aside>
+									</div>
 								</li>
 							);
 						}}
