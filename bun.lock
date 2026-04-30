@@ -4,8 +4,10 @@
   "workspaces": {
     "": {
       "name": "arcadia",
-      "devDependencies": {
+      "dependencies": {
         "@biomejs/biome": "^2.4.13",
+      },
+      "devDependencies": {
         "@types/bun": "^1.3.13",
         "typescript": "^6.0.3",
       },
@@ -14,14 +16,14 @@
       "name": "arcadia-ts",
       "version": "1.5.0",
       "dependencies": {
-        "pixi.js": "latest",
-        "solid-js": "latest",
+        "pixi.js": "^8.18.1",
+        "solid-js": "^1.9.12",
       },
       "devDependencies": {
-        "@types/node": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
+        "@types/node": "^25.6.0",
+        "typescript": "~6.0.3",
+        "vite": "^8.0.10",
+        "vite-plugin-solid": "^2.11.12",
       },
     },
     "playground/astra-naught": {
