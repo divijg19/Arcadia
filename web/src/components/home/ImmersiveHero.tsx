@@ -1,5 +1,16 @@
 import { createMemo, createSignal, For, onCleanup, onMount } from "solid-js";
 
+const storyTiming = {
+	homeScale: 2.4,
+	contentStart: 0.26,
+	introStart: 0.28,
+	introDuration: 0.12,
+	panelStart: 0.38,
+	panelStep: 0.18,
+	panelDuration: 0.12,
+	statsStart: 0.82,
+} as const;
+
 const whitepaperSections = [
 	{
 		title: "Deterministic ECS",
@@ -64,32 +75,108 @@ const languageStats = [
 export default function ImmersiveHero() {
 	let apertureCanvasRef: HTMLCanvasElement | undefined;
 	const [scrollProgress, setScrollProgress] = createSignal(0);
+	const [prefersReducedMotion, setPrefersReducedMotion] = createSignal(false);
+	const apertureEngulfProgress = createMemo(() => {
+		if (prefersReducedMotion()) return 0;
+		return Math.max(0, Math.min(1, (scrollProgress() - 0.01) / 0.42));
+	});
 
-	const apertureScale = createMemo(() => 1 + scrollProgress() * 2.4);
+	const apertureScale = createMemo(() =>
+		prefersReducedMotion()
+			? 1
+			: Math.max(1, 1 + apertureEngulfProgress() ** 1.6 * 32),
+	);
 	const apertureDarkness = createMemo(() => {
-		const mapped = (scrollProgress() - 0.18) / 0.34;
-		return Math.max(0, Math.min(1, mapped));
+		const mapped = (scrollProgress() - 0.12) / 0.34;
+		return Math.max(0, Math.min(1, mapped)) * 1.15;
 	});
 	const apertureOpacity = createMemo(() =>
-		Math.max(0, 1 - scrollProgress() * 1.08),
+		prefersReducedMotion()
+			? 1
+			: Math.max(0, 1 - Math.max(0, scrollProgress() - 0.8) / 0.12),
 	);
 	const contentOpacity = createMemo(() =>
-		Math.max(0, Math.min(1, (scrollProgress() - 0.26) / 0.46)),
+		prefersReducedMotion()
+			? 1
+			: Math.max(
+					0,
+					Math.min(1, (scrollProgress() - storyTiming.contentStart) / 0.46),
+				),
 	);
 	const introOpacity = createMemo(() =>
-		Math.max(0, Math.min(1, (scrollProgress() - 0.28) / 0.12)),
+		prefersReducedMotion()
+			? 1
+			: Math.max(
+					0,
+					Math.min(
+						1,
+						(scrollProgress() - storyTiming.introStart) /
+							storyTiming.introDuration,
+					),
+				),
 	);
 	const statsOpacity = createMemo(() =>
-		Math.max(0, Math.min(1, (scrollProgress() - 0.82) / 0.12)),
+		prefersReducedMotion()
+			? 1
+			: Math.max(
+					0,
+					Math.min(
+						1,
+						(scrollProgress() - storyTiming.statsStart) /
+							storyTiming.panelDuration,
+					),
+				),
 	);
+	const storyDepth = createMemo(() =>
+		prefersReducedMotion()
+			? 1
+			: Math.max(0, Math.min(1, (scrollProgress() - 0.18) / 0.58)),
+	);
+	const panelProgress = (index: number) => {
+		if (prefersReducedMotion()) return 1;
+		const start = storyTiming.panelStart + index * storyTiming.panelStep;
+		const end = start + storyTiming.panelDuration;
+		const inWindow = Math.max(
+			0,
+			Math.min(1, (scrollProgress() - start) / storyTiming.panelDuration),
+		);
+		const outWindow = Math.max(
+			0,
+			Math.min(1, (end - scrollProgress()) / (storyTiming.panelDuration * 0.7)),
+		);
+		return Math.min(inWindow, outWindow) * 1.18;
+	};
 	const revealCardOpacity = (index: number) => {
-		const start = 0.38 + index * 0.18;
-		return Math.max(0, Math.min(1, (scrollProgress() - start) / 0.12));
+		const progress = panelProgress(index);
+		return prefersReducedMotion() ? 1 : Math.max(0, Math.min(1, progress));
+	};
+	const revealCardDepth = (index: number) => {
+		if (prefersReducedMotion()) return 0;
+		const progress = panelProgress(index);
+		return (1 - progress) * -180;
+	};
+	const revealCardScale = (index: number) => {
+		if (prefersReducedMotion()) return 1;
+		const progress = panelProgress(index);
+		return 0.9 + progress * 0.12;
 	};
 
 	onMount(() => {
+		const reducedMotionQuery = window.matchMedia(
+			"(prefers-reduced-motion: reduce)",
+		);
+		const syncReducedMotion = () =>
+			setPrefersReducedMotion(reducedMotionQuery.matches);
+		syncReducedMotion();
+		reducedMotionQuery.addEventListener("change", syncReducedMotion);
+
 		const context = apertureCanvasRef?.getContext("2d");
-		if (!context) return;
+		if (!context) {
+			onCleanup(() =>
+				reducedMotionQuery.removeEventListener("change", syncReducedMotion),
+			);
+			return;
+		}
 
 		let frame = 0;
 		let rafId = 0;
@@ -108,6 +195,24 @@ export default function ImmersiveHero() {
 		};
 
 		const draw = () => {
+			if (prefersReducedMotion()) {
+				const aperture = context.createRadialGradient(
+					width * 0.5,
+					height * 0.5,
+					Math.min(width, height) * 0.08,
+					width * 0.5,
+					height * 0.5,
+					Math.max(width, height) * 0.8,
+				);
+				aperture.addColorStop(0, "rgba(242, 240, 233, 0.12)");
+				aperture.addColorStop(0.3, "rgba(217, 92, 20, 0.12)");
+				aperture.addColorStop(1, "rgba(0, 0, 0, 0.98)");
+				context.clearRect(0, 0, width, height);
+				context.fillStyle = aperture;
+				context.fillRect(0, 0, width, height);
+				return;
+			}
+
 			frame += 1;
 			context.clearRect(0, 0, width, height);
 
@@ -125,6 +230,27 @@ export default function ImmersiveHero() {
 
 			context.fillStyle = glow;
 			context.fillRect(0, 0, width, height);
+
+			const pulse = Math.sin(frame * 0.008) * 0.5 + 0.5;
+			const ringRadius = Math.min(width, height) * (0.18 + pulse * 0.03);
+			context.save();
+			context.globalCompositeOperation = "screen";
+			context.strokeStyle = `rgba(242, 240, 233, ${0.08 + pulse * 0.08})`;
+			context.lineWidth = 1.2;
+			for (let ring = 0; ring < 4; ring += 1) {
+				context.beginPath();
+				context.ellipse(
+					width * 0.5 + Math.sin(frame * 0.01 + ring) * 4,
+					height * 0.5 + Math.cos(frame * 0.012 + ring) * 3,
+					ringRadius + ring * 14,
+					ringRadius * 0.55 + ring * 8,
+					frame * 0.002 * (ring + 1),
+					0,
+					Math.PI * 2,
+				);
+				context.stroke();
+			}
+			context.restore();
 
 			context.globalCompositeOperation = "screen";
 			for (let index = 0; index < 42; index += 1) {
@@ -162,6 +288,7 @@ export default function ImmersiveHero() {
 			window.cancelAnimationFrame(rafId);
 			window.removeEventListener("resize", resizeCanvas);
 			window.removeEventListener("scroll", updateScroll);
+			reducedMotionQuery.removeEventListener("change", syncReducedMotion);
 		});
 	});
 
@@ -197,65 +324,81 @@ export default function ImmersiveHero() {
 
 			<div
 				class="home-story-track"
-				style={{ opacity: `${contentOpacity().toFixed(3)}` }}
+				style={{
+					opacity: `${contentOpacity().toFixed(3)}`,
+					transform: `translate3d(0, ${(1 - storyDepth()) * 20}px, 0)`,
+				}}
 			>
 				<section class="home-story-intro-panel">
-					<div
+					<section
 						class="home-story-intro-panel-inner"
+						aria-labelledby="home-story-intro-title"
 						style={{
 							opacity: `${introOpacity().toFixed(3)}`,
-							transform: `translate3d(0, ${(1 - introOpacity()) * 20}px, 0)`,
+							transform: `translate3d(0, ${(1 - introOpacity()) * 28}px, ${(1 - introOpacity()) * -54}px)`,
 						}}
 					>
 						<p class="whitepaper-kicker">Systems Whitepaper</p>
-						<h2>The Digital Atelier</h2>
-						<p class="whitepaper-lead">
-							A deterministic simulation runtime paired with a lean host layer,
-							orchestrated through scripted poetry. This is the spine of
-							Arcadia.
-						</p>
-					</div>
-				</section>
-
-				<For each={whitepaperSections}>
-					{(section, index) => (
-						<section class="home-story-panel">
-							<div
-								class="home-story-panel-card"
-								style={{
-									opacity: `${revealCardOpacity(index()).toFixed(3)}`,
-									transform: `translate3d(0, ${(1 - revealCardOpacity(index())) * 24}px, 0)`,
-								}}
-							>
-								<p class="whitepaper-kicker">{section.meta[0]}</p>
-								<h3>{section.title}</h3>
-								<p class="home-story-copy">{section.lead}</p>
-								<div class="home-story-body-grid">
-									<div class="whitepaper-copy">
-										<For each={section.body}>
-											{(paragraph) => <p>{paragraph}</p>}
-										</For>
-									</div>
-									<div class="whitepaper-right">
-										<pre class="whitepaper-schematic">
-											{section.schematic.join("\n")}
-										</pre>
-										<div class="whitepaper-meta">
-											<For each={section.meta}>{(meta) => <p>{meta}</p>}</For>
+						<h2 id="home-story-intro-title">The Digital Atelier</h2>
+						<For each={whitepaperSections}>
+							{(section, index) => {
+								const prog = panelProgress(index());
+								const isActive = prog > 0.02;
+								return (
+									<section
+										class="home-story-panel"
+										aria-labelledby={`panel-${index()}-title`}
+										style={{
+											position: isActive ? "fixed" : "relative",
+											inset: isActive ? "0" : undefined,
+											display: isActive ? "flex" : undefined,
+											"align-items": isActive ? "center" : undefined,
+											"justify-content": isActive ? "center" : undefined,
+											"z-index": isActive ? 60 + index() : undefined,
+											"pointer-events": isActive ? "auto" : "none",
+										}}
+									>
+										<div
+											class="home-story-panel-card"
+											style={{
+												opacity: `${revealCardOpacity(index()).toFixed(3)}`,
+												transform: `translate3d(0, ${(1 - revealCardOpacity(index())) * 36}px, ${revealCardDepth(index())}px) scale(${revealCardScale(index()).toFixed(3)})`,
+											}}
+										>
+											<p class="whitepaper-kicker">{section.meta[0]}</p>
+											<h3 id={`panel-${index()}-title`}>{section.title}</h3>
+											<p class="home-story-copy">{section.lead}</p>
+											<div class="home-story-body-grid">
+												<div class="whitepaper-copy">
+													<For each={section.body}>
+														{(paragraph) => <p>{paragraph}</p>}
+													</For>
+												</div>
+												<div class="whitepaper-right">
+													<pre class="whitepaper-schematic">
+														{section.schematic.join("\n")}
+													</pre>
+													<div class="whitepaper-meta">
+														<For each={section.meta}>
+															{(meta) => <p>{meta}</p>}
+														</For>
+													</div>
+												</div>
+											</div>
 										</div>
-									</div>
-								</div>
-							</div>
-						</section>
-					)}
-				</For>
+									</section>
+								);
+							}}
+						</For>
+					</section>
+				</section>
 
 				<section class="home-language-panel" aria-label="Language statistics">
 					<div
 						class="home-language-panel-inner"
 						style={{
 							opacity: `${statsOpacity().toFixed(3)}`,
-							transform: `translate3d(0, ${(1 - statsOpacity()) * 24}px, 0)`,
+							transform: `translate3d(0, ${(1 - statsOpacity()) * 28}px, ${(1 - statsOpacity()) * -64}px)`,
 						}}
 					>
 						<p class="whitepaper-kicker">Language stack</p>
