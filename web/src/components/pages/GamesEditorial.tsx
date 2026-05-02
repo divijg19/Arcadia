@@ -83,11 +83,20 @@ export default function GamesEditorial() {
 			<section class="games-launcher-content">
 				<header class="games-launcher-head">
 					<p class="type-math">interactive archive</p>
-					<h1 class="type-soul">Play-Ready Releases</h1>
-					<p class="games-launcher-intro">
-						Hover or focus a title to crossfade the atmosphere and reveal an
-						immediate launch panel.
-					</p>
+					<div class="head-title-row">
+						<h1 class="type-soul">
+							<span style="display: block; white-space: nowrap; font-family: inherit;">
+								Play-Ready
+							</span>
+							<span style="display: block; white-space: nowrap; font-family: inherit;">
+								Releases
+							</span>
+						</h1>
+						<p class="games-launcher-intro">
+							Hover or focus a title to crossfade the atmosphere and reveal an
+							immediate launch panel.
+						</p>
+					</div>
 				</header>
 
 				<ul class="games-launcher-list">

@@ -175,18 +175,23 @@ export default function EnginesEditorial() {
 
 	return (
 		<main class="atelier-page engines-ground-page">
-			<div class="engines-backdrop" aria-hidden="true">
-				<canvas ref={canvasRef} class="engines-canvas" />
-			</div>
-
 			<section class="engines-ground-shell">
 				<header class="engines-ground-head">
 					<p class="type-math">cursor-aware proving ground</p>
-					<h1 class="type-soul">Engines As Living Surfaces</h1>
-					<p class="engines-ground-intro">
-						Hover an engine to shift the background canvas. The cursor repels
-						the field, lighting the architecture in motion.
-					</p>
+					<div class="head-title-row">
+						<h1 class="type-soul">
+							<span style="display: block; white-space: nowrap; font-family: inherit;">
+								Engines As
+							</span>
+							<span style="display: block; white-space: nowrap; font-family: inherit;">
+								Living Surfaces
+							</span>
+						</h1>
+						<p class="engines-ground-intro">
+							Hover an engine to shift the background canvas. The cursor repels
+							the field, lighting the architecture in motion.
+						</p>
+					</div>
 				</header>
 
 				<div class="engines-ground-grid">
@@ -202,8 +207,6 @@ export default function EnginesEditorial() {
 												class="engines-name-button"
 												onMouseEnter={() => setActiveId(engine.id)}
 												onFocus={() => setActiveId(engine.id)}
-												onBlur={() => setActiveId(null)}
-												onMouseLeave={() => setActiveId(null)}
 											>
 												<span class="engines-name">{engine.name}</span>
 												<span class="engines-stack">{engine.stack}</span>
@@ -231,6 +234,9 @@ export default function EnginesEditorial() {
 						<p class="type-math">live surface</p>
 						<h2 class="type-soul">{activeEngine().name}</h2>
 						<p class="engines-panel-copy">{activeEngine().copy}</p>
+						<div class="engines-surface-box" aria-hidden="true">
+							<canvas ref={canvasRef} class="engines-canvas" />
+						</div>
 						<div class="engines-panel-notes">
 							<For each={activeEngine().notes}>{(note) => <p>{note}</p>}</For>
 						</div>
