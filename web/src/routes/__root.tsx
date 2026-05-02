@@ -4,13 +4,46 @@ import {
 	Outlet,
 	Scripts,
 } from "@tanstack/solid-router";
-import { TanStackRouterDevtools } from "@tanstack/solid-router-devtools";
-import { Suspense } from "solid-js";
+import { lazy, Show, Suspense } from "solid-js";
 import { HydrationScript } from "solid-js/web";
 import CinematicCursor from "~/components/effects/CinematicCursor";
 import Navbar from "~/components/nav/FloatingPillNav";
 
 import indexCss from "../index.css?url";
+
+// Lazy load DevTools only in development
+const TanStackRouterDevtools = lazy(() =>
+	import("@tanstack/solid-router-devtools").then((mod) => ({
+		default: mod.TanStackRouterDevtools,
+	})),
+);
+
+// Validate required environment variables
+const validateEnv = () => {
+	const requiredEnvVars = {
+		VITE_ARCADIA_GAMES_CDN_BASE: import.meta.env.VITE_ARCADIA_GAMES_CDN_BASE,
+	};
+
+	const missing = Object.entries(requiredEnvVars)
+		.filter(([, value]) => !value)
+		.map(([key]) => key);
+
+	if (missing.length > 0) {
+		console.error(
+			`Missing required environment variables: ${missing.join(", ")}`,
+		);
+		if (import.meta.env.DEV) {
+			console.warn("App may not function correctly without these variables");
+		}
+	}
+
+	return requiredEnvVars as Record<string, string>;
+};
+
+// Validate on app startup
+if (typeof window !== "undefined") {
+	validateEnv();
+}
 
 export const Route = createRootRouteWithContext()({
 	head: () => ({
@@ -52,7 +85,9 @@ function RootComponent() {
 					<main class="site-frame">
 						<Outlet />
 					</main>
-					<TanStackRouterDevtools />
+					<Show when={import.meta.env.DEV}>
+						<TanStackRouterDevtools />
+					</Show>
 				</Suspense>
 				<Scripts />
 			</body>

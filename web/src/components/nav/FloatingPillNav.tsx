@@ -152,10 +152,52 @@ function MobileNavToggle(props: { isMenuOpen: boolean; onToggle: () => void }) {
 
 function MobileMenu(props: { isMenuOpen: boolean; onClose: () => void }) {
 	const location = useLocation();
+	let overlayRef: HTMLDivElement | undefined;
+
+	createEffect(() => {
+		if (!props.isMenuOpen || !overlayRef) return;
+
+		// Focus the first menu item on open
+		const firstLink = overlayRef.querySelector("a");
+		firstLink?.focus();
+
+		// Simple focus trap: trap focus within the menu
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "Tab" || !overlayRef) return;
+
+			const focusableElements = overlayRef.querySelectorAll(
+				"a, button, [tabindex]:not([tabindex='-1'])",
+			);
+			const firstElement = focusableElements[0] as HTMLElement;
+			const lastElement = focusableElements[
+				focusableElements.length - 1
+			] as HTMLElement;
+
+			if (e.shiftKey && document.activeElement === firstElement) {
+				e.preventDefault();
+				lastElement?.focus();
+			} else if (!e.shiftKey && document.activeElement === lastElement) {
+				e.preventDefault();
+				firstElement?.focus();
+			}
+		};
+
+		overlayRef.addEventListener("keydown", handleKeyDown);
+
+		onCleanup(() => {
+			overlayRef?.removeEventListener("keydown", handleKeyDown);
+		});
+	});
 
 	return (
 		<Show when={props.isMenuOpen}>
-			<div class="mobile-menu-overlay" role="dialog" aria-modal="true">
+			<div
+				ref={overlayRef}
+				class="mobile-menu-overlay"
+				role="dialog"
+				aria-modal="true"
+				aria-label="Navigation menu"
+			>
 				<ul class="mobile-menu-list">
 					<For each={NAV_LINKS}>
 						{(link, index) => {
