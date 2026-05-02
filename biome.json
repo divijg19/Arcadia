@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -46,9 +46,7 @@
 	},
 	"overrides": [
 		{
-			"includes": [
-				"web/src/routeTree.gen.ts"
-			],
+			"includes": ["web/src/routeTree.gen.ts"],
 			"formatter": {
 				"enabled": false
 			},
@@ -60,9 +58,7 @@
 			}
 		},
 		{
-			"includes": [
-				"packages/arcadia-rs/**"
-			],
+			"includes": ["packages/arcadia-rs/**"],
 			"formatter": {
 				"enabled": false
 			},
@@ -74,9 +70,7 @@
 			}
 		},
 		{
-			"includes": [
-				"web/**"
-			],
+			"includes": ["web/**"],
 			"formatter": {
 				"enabled": true,
 				"indentStyle": "tab"
