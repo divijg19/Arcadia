@@ -234,11 +234,11 @@ export default function EnginesEditorial() {
 						<p class="type-math">live surface</p>
 						<h2 class="type-soul">{activeEngine().name}</h2>
 						<p class="engines-panel-copy">{activeEngine().copy}</p>
-						<div class="engines-surface-box" aria-hidden="true">
-							<canvas ref={canvasRef} class="engines-canvas" />
-						</div>
 						<div class="engines-panel-notes">
 							<For each={activeEngine().notes}>{(note) => <p>{note}</p>}</For>
+						</div>
+						<div class="engines-surface-box" aria-hidden="true">
+							<canvas ref={canvasRef} class="engines-canvas" />
 						</div>
 					</aside>
 				</div>
