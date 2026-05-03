@@ -18,31 +18,44 @@ const TanStackRouterDevtools = lazy(() =>
 	})),
 );
 
-// Validate required environment variables
+// Validate required environment variables (non-blocking)
 const validateEnv = () => {
+	// Provide safe defaults so missing variables do not block rendering.
 	const requiredEnvVars = {
-		VITE_ARCADIA_GAMES_CDN_BASE: import.meta.env.VITE_ARCADIA_GAMES_CDN_BASE,
-	};
+		VITE_ARCADIA_GAMES_CDN_BASE:
+			import.meta.env.VITE_ARCADIA_GAMES_CDN_BASE ?? "",
+	} as Record<string, string>;
 
 	const missing = Object.entries(requiredEnvVars)
 		.filter(([, value]) => !value)
 		.map(([key]) => key);
 
 	if (missing.length > 0) {
-		console.error(
-			`Missing required environment variables: ${missing.join(", ")}`,
+		// Use warn instead of error to avoid stopping or alarming in production.
+		console.warn(
+			`Missing environment variables (using safe defaults): ${missing.join(", ")}`,
 		);
 		if (import.meta.env.DEV) {
-			console.warn("App may not function correctly without these variables");
+			console.info(
+				"Set required env vars in .env or your deployment environment to enable CDN-hosted assets.",
+			);
 		}
 	}
 
-	return requiredEnvVars as Record<string, string>;
+	return requiredEnvVars;
 };
 
 // Validate on app startup
 if (typeof window !== "undefined") {
-	validateEnv();
+	const env = validateEnv();
+	// Expose a safe runtime env map for other modules to read without accessing import.meta.env directly.
+	try {
+		(
+			window as unknown as { __ARCADIA_ENV?: Record<string, string> }
+		).__ARCADIA_ENV = env;
+	} catch {
+		// ignore if window is locked down
+	}
 }
 
 export const Route = createRootRouteWithContext()({
