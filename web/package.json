@@ -13,28 +13,28 @@
 		"deploy": "bun run build && wrangler deploy"
 	},
 	"dependencies": {
-		"@cloudflare/vite-plugin": "^1.40.0",
+		"@cloudflare/vite-plugin": "^1.42.1",
 		"@fontsource/inter": "^5.2.8",
-		"@tailwindcss/vite": "^4.3.0",
+		"@tailwindcss/vite": "^4.3.1",
 		"@tanstack/router-plugin": "^1.168.18",
 		"@tanstack/solid-form": "^1.33.0",
-		"@tanstack/solid-router": "^1.170.15",
+		"@tanstack/solid-router": "^1.170.16",
 		"@tanstack/solid-router-devtools": "^1.167.0",
 		"@tanstack/solid-router-ssr-query": "^1.167.1",
-		"@tanstack/solid-start": "^1.168.25",
+		"@tanstack/solid-start": "^1.168.26",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"solid-js": "^1.9.13",
 		"tailwind-merge": "^3.6.0",
-		"tailwindcss": "^4.3.0",
+		"tailwindcss": "^4.3.1",
 		"tailwindcss-animate": "^1.0.7"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.16",
-		"@tanstack/devtools-vite": "^0.7.0",
+		"@biomejs/biome": "^2.5.0",
+		"@tanstack/devtools-vite": "^0.8.0",
 		"typescript": "^6.0.3",
 		"vite": "^8.0.16",
 		"vite-plugin-solid": "^2.11.12",
-		"wrangler": "^4.98.0"
+		"wrangler": "^4.103.0"
 	}
 }
