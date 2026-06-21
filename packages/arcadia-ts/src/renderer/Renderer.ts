@@ -177,7 +177,8 @@ export class Renderer {
 			}
 		}
 
-		const frameName = (this.spriteMap[Math.trunc(spriteId)] ?? this.spriteMap[0]) as string;
+		const frameName = (this.spriteMap[Math.trunc(spriteId)] ??
+			this.spriteMap[0]) as string;
 		const tex = this.textures[frameName] ?? Texture.WHITE;
 
 		const s = new Sprite(tex) as PixiTaggedSprite;
@@ -212,7 +213,8 @@ export class Renderer {
 			const idIndex = Math.trunc(id);
 
 			const spriteId = view[offset + 4];
-			const spriteIdNum = typeof spriteId === "number" ? Math.trunc(spriteId) : 0;
+			const spriteIdNum =
+				typeof spriteId === "number" ? Math.trunc(spriteId) : 0;
 			const sprite = this.getOrCreateSprite(idIndex, spriteIdNum);
 
 			const x = view[offset + 1];
