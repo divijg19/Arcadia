@@ -13,7 +13,7 @@
 		"deploy": "bun run build && wrangler deploy"
 	},
 	"dependencies": {
-		"@cloudflare/vite-plugin": "^1.42.2",
+		"@cloudflare/vite-plugin": "^1.42.3",
 		"@fontsource/inter": "^5.2.8",
 		"@tailwindcss/vite": "^4.3.1",
 		"@tanstack/router-plugin": "^1.168.18",
@@ -35,6 +35,6 @@
 		"typescript": "^6.0.3",
 		"vite": "^8.1.0",
 		"vite-plugin-solid": "^2.11.12",
-		"wrangler": "^4.104.0"
+		"wrangler": "^4.105.0"
 	}
 }
