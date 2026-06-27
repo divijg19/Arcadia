@@ -16,14 +16,14 @@
       "name": "arcadia-ts",
       "version": "1.7.0",
       "dependencies": {
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.13",
+        "pixi.js": "latest",
+        "solid-js": "latest",
       },
       "devDependencies": {
-        "@types/node": "^26.0.0",
-        "typescript": "~6.0.3",
-        "vite": "^8.1.0",
-        "vite-plugin-solid": "^2.11.12",
+        "@types/node": "latest",
+        "typescript": "latest",
+        "vite": "latest",
+        "vite-plugin-solid": "latest",
       },
     },
     "playground/astra-naught": {
@@ -100,14 +100,14 @@
       "name": "spinfall-arena",
       "dependencies": {
         "arcadia-ts": "workspace:*",
-        "pixi.js": "latest",
-        "solid-js": "latest",
+        "pixi.js": "^8.19.0",
+        "solid-js": "^1.9.13",
       },
       "devDependencies": {
-        "@types/node": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
+        "@types/node": "^26.0.1",
+        "typescript": "~6.0.3",
+        "vite": "^8.1.0",
+        "vite-plugin-solid": "^2.11.12",
       },
     },
     "web": {
