@@ -15,7 +15,7 @@
 	"dependencies": {
 		"@cloudflare/vite-plugin": "^1.42.3",
 		"@fontsource/inter": "^5.2.8",
-		"@tailwindcss/vite": "^4.3.1",
+		"@tailwindcss/vite": "^4.3.2",
 		"@tanstack/router-plugin": "^1.168.18",
 		"@tanstack/solid-form": "^1.33.0",
 		"@tanstack/solid-router": "^1.170.16",
@@ -26,7 +26,7 @@
 		"clsx": "^2.1.1",
 		"solid-js": "^1.9.13",
 		"tailwind-merge": "^3.6.0",
-		"tailwindcss": "^4.3.1",
+		"tailwindcss": "^4.3.2",
 		"tailwindcss-animate": "^1.0.7"
 	},
 	"devDependencies": {
