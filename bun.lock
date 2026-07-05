@@ -58,6 +58,34 @@
       "name": "verdant-descent",
       "dependencies": {
         "arcadia-ts": "workspace:*",
+        "pixi.js": "^8.19.0",
+        "solid-js": "^1.9.14",
+      },
+      "devDependencies": {
+        "@types/node": "^26.1.0",
+        "typescript": "~6.0.3",
+        "vite": "^8.1.3",
+        "vite-plugin-solid": "^2.11.12",
+      },
+    },
+    "templates/cipher-room": {
+      "name": "cipher-room",
+      "dependencies": {
+        "arcadia-ts": "workspace:*",
+        "pixi.js": "^8.19.0",
+        "solid-js": "^1.9.14",
+      },
+      "devDependencies": {
+        "@types/node": "^26.1.0",
+        "typescript": "~6.0.3",
+        "vite": "^8.1.3",
+        "vite-plugin-solid": "^2.11.12",
+      },
+    },
+    "templates/downleaf": {
+      "name": "downleaf",
+      "dependencies": {
+        "arcadia-ts": "workspace:*",
         "pixi.js": "latest",
         "solid-js": "latest",
       },
@@ -68,45 +96,17 @@
         "vite-plugin-solid": "latest",
       },
     },
-    "templates/cipher-room": {
-      "name": "cipher-room",
-      "dependencies": {
-        "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.13",
-      },
-      "devDependencies": {
-        "@types/node": "^26.0.1",
-        "typescript": "~6.0.3",
-        "vite": "^8.1.2",
-        "vite-plugin-solid": "^2.11.12",
-      },
-    },
-    "templates/downleaf": {
-      "name": "downleaf",
-      "dependencies": {
-        "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.13",
-      },
-      "devDependencies": {
-        "@types/node": "^26.0.1",
-        "typescript": "~6.0.3",
-        "vite": "^8.1.2",
-        "vite-plugin-solid": "^2.11.12",
-      },
-    },
     "templates/spinfall-arena": {
       "name": "spinfall-arena",
       "dependencies": {
         "arcadia-ts": "workspace:*",
         "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.13",
+        "solid-js": "^1.9.14",
       },
       "devDependencies": {
-        "@types/node": "^26.0.1",
+        "@types/node": "^26.1.0",
         "typescript": "~6.0.3",
-        "vite": "^8.1.2",
+        "vite": "^8.1.3",
         "vite-plugin-solid": "^2.11.12",
       },
     },
