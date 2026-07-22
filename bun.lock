@@ -79,7 +79,7 @@
         "@types/node": "^26.1.1",
         "typescript": "^6.0.3",
         "vite": "^8.1.5",
-        "vite-plugin-solid": "^2.11.12",
+        "vite-plugin-solid": "^2.11.13",
       },
     },
     "templates/downleaf": {
@@ -93,7 +93,7 @@
         "@types/node": "^26.1.1",
         "typescript": "^6.0.3",
         "vite": "^8.1.5",
-        "vite-plugin-solid": "^2.11.12",
+        "vite-plugin-solid": "^2.11.13",
       },
     },
     "templates/spinfall-arena": {
@@ -107,7 +107,7 @@
         "@types/node": "^26.1.1",
         "typescript": "^6.0.3",
         "vite": "^8.1.5",
-        "vite-plugin-solid": "^2.11.12",
+        "vite-plugin-solid": "^2.11.13",
       },
     },
     "web": {
