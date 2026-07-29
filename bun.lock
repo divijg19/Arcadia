@@ -34,10 +34,10 @@
         "solid-js": "^1.9.14",
       },
       "devDependencies": {
-        "@types/node": "^26.1.1",
+        "@types/node": "^26.1.2",
         "typescript": "^6.0.3",
         "vite": "^8.1.5",
-        "vite-plugin-solid": "^2.11.13",
+        "vite-plugin-solid": "^2.11.14",
       },
     },
     "playground/babylon-estate": {
@@ -48,10 +48,10 @@
         "solid-js": "^1.9.14",
       },
       "devDependencies": {
-        "@types/node": "^26.1.1",
+        "@types/node": "^26.1.2",
         "typescript": "^6.0.3",
         "vite": "^8.1.5",
-        "vite-plugin-solid": "^2.11.13",
+        "vite-plugin-solid": "^2.11.14",
       },
     },
     "playground/verdant-descent": {
@@ -62,10 +62,10 @@
         "solid-js": "^1.9.14",
       },
       "devDependencies": {
-        "@types/node": "^26.1.1",
+        "@types/node": "^26.1.2",
         "typescript": "^6.0.3",
         "vite": "^8.1.5",
-        "vite-plugin-solid": "^2.11.13",
+        "vite-plugin-solid": "^2.11.14",
       },
     },
     "templates/cipher-room": {
