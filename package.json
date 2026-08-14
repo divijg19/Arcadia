@@ -44,6 +44,6 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@biomejs/biome": "^2.5.7"
+    "@biomejs/biome": "^2.5.8"
   }
 }
