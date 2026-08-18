@@ -44,14 +44,14 @@
       "name": "babylon-estate",
       "dependencies": {
         "arcadia-ts": "workspace:*",
-        "pixi.js": "latest",
-        "solid-js": "latest",
+        "pixi.js": "^8.19.0",
+        "solid-js": "^1.9.15",
       },
       "devDependencies": {
-        "@types/node": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
+        "@types/node": "^26.2.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.2.1",
+        "vite-plugin-solid": "^2.11.14",
       },
     },
     "playground/verdant-descent": {
@@ -73,7 +73,7 @@
       "dependencies": {
         "arcadia-ts": "workspace:*",
         "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.14",
+        "solid-js": "^1.9.15",
       },
       "devDependencies": {
         "@types/node": "^26.2.0",
@@ -87,7 +87,7 @@
       "dependencies": {
         "arcadia-ts": "workspace:*",
         "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.14",
+        "solid-js": "^1.9.15",
       },
       "devDependencies": {
         "@types/node": "^26.2.0",
@@ -100,14 +100,14 @@
       "name": "spinfall-arena",
       "dependencies": {
         "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.14",
+        "pixi.js": "latest",
+        "solid-js": "latest",
       },
       "devDependencies": {
-        "@types/node": "^26.2.0",
-        "typescript": "^6.0.3",
-        "vite": "^8.2.1",
-        "vite-plugin-solid": "^2.11.14",
+        "@types/node": "latest",
+        "typescript": "latest",
+        "vite": "latest",
+        "vite-plugin-solid": "latest",
       },
     },
     "web": {
