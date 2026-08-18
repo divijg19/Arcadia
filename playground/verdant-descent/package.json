@@ -12,7 +12,7 @@
 	"dependencies": {
 		"arcadia-ts": "workspace:*",
 		"pixi.js": "^8.19.0",
-		"solid-js": "^1.9.14"
+		"solid-js": "^1.9.15"
 	},
 	"devDependencies": {
 		"typescript": "^6.0.3",
