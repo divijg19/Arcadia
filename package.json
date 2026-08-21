@@ -40,10 +40,10 @@
     "qa": "bun type-check && bun lint && bun format &&  bun run test"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.14",
+    "@types/bun": "^1.4.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@biomejs/biome": "^2.5.9"
+    "@biomejs/biome": "^2.5.10"
   }
 }
