@@ -16,6 +16,48 @@
       "name": "arcadia-ts",
       "version": "1.7.0",
       "dependencies": {
+        "pixi.js": "^8.20.1",
+        "solid-js": "^1.9.15",
+      },
+      "devDependencies": {
+        "@types/node": "^26.4.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.2.2",
+        "vite-plugin-solid": "^2.11.14",
+      },
+    },
+    "playground/astra-naught": {
+      "name": "astra-naught",
+      "dependencies": {
+        "arcadia-ts": "workspace:*",
+        "pixi.js": "^8.20.1",
+        "solid-js": "^1.9.15",
+      },
+      "devDependencies": {
+        "@types/node": "^26.4.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.2.2",
+        "vite-plugin-solid": "^2.11.14",
+      },
+    },
+    "playground/babylon-estate": {
+      "name": "babylon-estate",
+      "dependencies": {
+        "arcadia-ts": "workspace:*",
+        "pixi.js": "^8.20.1",
+        "solid-js": "^1.9.15",
+      },
+      "devDependencies": {
+        "@types/node": "^26.4.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.2.2",
+        "vite-plugin-solid": "^2.11.14",
+      },
+    },
+    "playground/verdant-descent": {
+      "name": "verdant-descent",
+      "dependencies": {
+        "arcadia-ts": "workspace:*",
         "pixi.js": "latest",
         "solid-js": "latest",
       },
@@ -24,48 +66,6 @@
         "typescript": "latest",
         "vite": "latest",
         "vite-plugin-solid": "latest",
-      },
-    },
-    "playground/astra-naught": {
-      "name": "astra-naught",
-      "dependencies": {
-        "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.15",
-      },
-      "devDependencies": {
-        "@types/node": "^26.2.0",
-        "typescript": "^6.0.3",
-        "vite": "^8.2.1",
-        "vite-plugin-solid": "^2.11.14",
-      },
-    },
-    "playground/babylon-estate": {
-      "name": "babylon-estate",
-      "dependencies": {
-        "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.15",
-      },
-      "devDependencies": {
-        "@types/node": "^26.2.0",
-        "typescript": "^6.0.3",
-        "vite": "^8.2.1",
-        "vite-plugin-solid": "^2.11.14",
-      },
-    },
-    "playground/verdant-descent": {
-      "name": "verdant-descent",
-      "dependencies": {
-        "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.19.0",
-        "solid-js": "^1.9.15",
-      },
-      "devDependencies": {
-        "@types/node": "^26.2.0",
-        "typescript": "^6.0.3",
-        "vite": "^8.2.1",
-        "vite-plugin-solid": "^2.11.14",
       },
     },
     "templates/cipher-room": {
