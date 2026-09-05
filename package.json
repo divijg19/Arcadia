@@ -40,7 +40,7 @@
     "qa": "bun type-check && bun lint && bun format &&  bun run test"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.0",
+    "@types/bun": "^1.4.1",
     "typescript": "^6.0.3"
   },
   "dependencies": {
