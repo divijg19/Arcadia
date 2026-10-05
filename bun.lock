@@ -16,25 +16,25 @@
       "name": "arcadia-ts",
       "version": "1.7.0",
       "dependencies": {
-        "pixi.js": "latest",
-        "solid-js": "latest",
+        "pixi.js": "^8.22.0",
+        "solid-js": "^1.9.15",
       },
       "devDependencies": {
-        "@types/node": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
+        "@types/node": "^26.6.4",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.2",
+        "vite-plugin-solid": "^2.11.14",
       },
     },
     "playground/astra-naught": {
       "name": "astra-naught",
       "dependencies": {
         "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.21.0",
+        "pixi.js": "^8.22.0",
         "solid-js": "^1.9.15",
       },
       "devDependencies": {
-        "@types/node": "^26.6.3",
+        "@types/node": "^26.6.4",
         "typescript": "^6.0.3",
         "vite": "^8.3.2",
         "vite-plugin-solid": "^2.11.14",
@@ -44,11 +44,11 @@
       "name": "babylon-estate",
       "dependencies": {
         "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.21.0",
+        "pixi.js": "^8.22.0",
         "solid-js": "^1.9.15",
       },
       "devDependencies": {
-        "@types/node": "^26.6.3",
+        "@types/node": "^26.6.4",
         "typescript": "^6.0.3",
         "vite": "^8.3.2",
         "vite-plugin-solid": "^2.11.14",
@@ -58,14 +58,14 @@
       "name": "verdant-descent",
       "dependencies": {
         "arcadia-ts": "workspace:*",
-        "pixi.js": "^8.21.0",
-        "solid-js": "^1.9.15",
+        "pixi.js": "latest",
+        "solid-js": "latest",
       },
       "devDependencies": {
-        "@types/node": "^26.6.3",
-        "typescript": "^6.0.3",
-        "vite": "^8.3.2",
-        "vite-plugin-solid": "^2.11.14",
+        "@types/node": "latest",
+        "typescript": "latest",
+        "vite": "latest",
+        "vite-plugin-solid": "latest",
       },
     },
     "templates/cipher-room": {
