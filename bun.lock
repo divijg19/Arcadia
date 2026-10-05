@@ -16,14 +16,14 @@
       "name": "arcadia-ts",
       "version": "1.7.0",
       "dependencies": {
-        "pixi.js": "^8.21.0",
-        "solid-js": "^1.9.15",
+        "pixi.js": "latest",
+        "solid-js": "latest",
       },
       "devDependencies": {
-        "@types/node": "^26.6.3",
-        "typescript": "^6.0.3",
-        "vite": "^8.3.2",
-        "vite-plugin-solid": "^2.11.14",
+        "@types/node": "latest",
+        "typescript": "latest",
+        "vite": "latest",
+        "vite-plugin-solid": "latest",
       },
     },
     "playground/astra-naught": {
@@ -113,29 +113,29 @@
     "web": {
       "name": "web",
       "dependencies": {
-        "@cloudflare/vite-plugin": "latest",
-        "@fontsource/inter": "latest",
-        "@tailwindcss/vite": "latest",
-        "@tanstack/router-plugin": "latest",
-        "@tanstack/solid-form": "latest",
-        "@tanstack/solid-router": "latest",
-        "@tanstack/solid-router-devtools": "latest",
-        "@tanstack/solid-router-ssr-query": "latest",
-        "@tanstack/solid-start": "latest",
-        "class-variance-authority": "latest",
-        "clsx": "latest",
-        "solid-js": "latest",
-        "tailwind-merge": "latest",
-        "tailwindcss": "latest",
-        "tailwindcss-animate": "latest",
+        "@cloudflare/vite-plugin": "^1.62.5",
+        "@fontsource/inter": "^5.3.0",
+        "@tailwindcss/vite": "^4.3.3",
+        "@tanstack/router-plugin": "^1.168.42",
+        "@tanstack/solid-form": "^1.33.5",
+        "@tanstack/solid-router": "^1.170.38",
+        "@tanstack/solid-router-devtools": "^1.167.2",
+        "@tanstack/solid-router-ssr-query": "^1.167.3",
+        "@tanstack/solid-start": "^1.168.57",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "solid-js": "^1.9.15",
+        "tailwind-merge": "^3.7.0",
+        "tailwindcss": "^4.3.3",
+        "tailwindcss-animate": "^1.0.7",
       },
       "devDependencies": {
-        "@biomejs/biome": "latest",
-        "@tanstack/devtools-vite": "latest",
-        "typescript": "latest",
-        "vite": "latest",
-        "vite-plugin-solid": "latest",
-        "wrangler": "latest",
+        "@biomejs/biome": "^2.5.15",
+        "@tanstack/devtools-vite": "^0.8.5",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.2",
+        "vite-plugin-solid": "^2.11.14",
+        "wrangler": "^4.147.0",
       },
     },
   },
@@ -551,7 +551,7 @@
 
     "@types/earcut": ["@types/earcut@3.0.0", "", {}, "sha512-k/9fOUGO39yd2sCjrbAJvGDEQvRwRnQIZlBz43roGwUZo5SHAmyVvSFyaVVZkicRVCaDXPKlbxrUcBuJoSWunQ=="],
 
-    "@types/node": ["@types/node@26.6.3", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-dsqMQQoeTLqu9wynDD00q573mNzso3IdQOAfHRJqLCcmCFPoGo9A1bDpUcv/9tnKpErQWv9uKeGfl37EIS02Yg=="],
+    "@types/node": ["@types/node@26.6.4", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg=="],
 
     "@webgpu/types": ["@webgpu/types@0.1.69", "", {}, "sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ=="],
 
@@ -719,7 +719,7 @@
 
     "picomatch": ["picomatch@4.0.7", "", {}, "sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA=="],
 
-    "pixi.js": ["pixi.js@8.21.0", "", { "dependencies": { "@pixi/colord": "^2.9.6", "@types/earcut": "^3.0.0", "@webgpu/types": "^0.1.69", "@xmldom/xmldom": "^0.8.15", "earcut": "^3.0.2", "eventemitter3": "^5.0.1", "gifuct-js": "^2.1.2", "ismobilejs": "^1.1.1", "parse-svg-path": "^0.2.0", "tiny-lru": "^11.4.7" } }, "sha512-GJ/KqBtUuWDBPMQu2D0ZHsRCYOcWRjjKrpyC+3jPQI5JTqHMC5dH8l9sSyvoUT4qJidvRzs1fwFWRWceno2Ltw=="],
+    "pixi.js": ["pixi.js@8.22.0", "", { "dependencies": { "@pixi/colord": "^2.9.6", "@types/earcut": "^3.0.0", "@webgpu/types": "^0.1.69", "@xmldom/xmldom": "^0.8.15", "earcut": "^3.0.2", "eventemitter3": "^5.0.1", "gifuct-js": "^2.1.2", "ismobilejs": "^1.1.1", "parse-svg-path": "^0.2.0", "tiny-lru": "^11.4.7" } }, "sha512-QbTANHMZ751MIjLiLSUSM8a7LNMWwMIf0KbRCqlW+SPS9hNLfSVS+cl1O2SEp9g1K/wyLzj/OJHv+1TUfiPr/w=="],
 
     "postcss": ["postcss@8.5.28", "", { "dependencies": { "nanoid": "^3.3.18", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A=="],
 
