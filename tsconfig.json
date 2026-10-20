@@ -1,11 +1,7 @@
 {
 	"compilerOptions": {
 		// Environment setup & latest features
-		"lib": [
-			"ESNext",
-			"DOM",
-			"DOM.Iterable"
-		],
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"target": "ESNext",
 		"module": "Preserve",
 		"moduleDetection": "force",
@@ -28,24 +24,11 @@
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
 		"paths": {
-			"arcadia-ts": [
-				"./packages/arcadia-ts/src"
-			],
-			"arcadia-ts/*": [
-				"./packages/arcadia-ts/src/*"
-			],
-			"arcadia-rs": [
-				"./packages/arcadia-rs"
-			],
-			"arcadia-rs/*": [
-				"./packages/arcadia-rs/*"
-			]
+			"arcadia-ts": ["./packages/arcadia-ts/src"],
+			"arcadia-ts/*": ["./packages/arcadia-ts/src/*"],
+			"arcadia-rs": ["./packages/arcadia-rs"],
+			"arcadia-rs/*": ["./packages/arcadia-rs/*"]
 		}
 	},
-	"include": [
-		"packages/**/*",
-		"projects/**/*",
-		"templates/**/*",
-		"types/**/*"
-	]
+	"include": ["packages/**/*", "projects/**/*", "templates/**/*", "types/**/*"]
 }
