@@ -1,49 +1,49 @@
 {
-  "name": "arcadia",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "workspaces": [
-    "web",
-    "packages/arcadia-ts",
-    "playground/astra-naught",
-    "playground/verdant-descent",
-    "playground/babylon-estate",
-    "templates/spinfall-arena",
-    "templates/downleaf",
-    "templates/cipher-room"
-  ],
-  "overrides": {
-    "typescript": "^6.0.3",
-    "solid-js": "^1.9.12",
-    "vite": "^8.0.10",
-    "vite-plugin-solid": "^2.11.12",
-    "@biomejs/biome": "^2.4.13"
-  },
-  "scripts": {
-    "type-check": "cd packages/arcadia-ts && tsc --noEmit && cd ../.. && cd playground/astra-naught && tsc --noEmit && cd ../verdant-descent && tsc --noEmit && cd ../babylon-estate && tsc --noEmit",
-    "spinfall": "wasm-pack build packages/arcadia-rs --target web && cd playground/astra-naught && bun run dev",
-    "downleaf": "wasm-pack build packages/arcadia-rs --target web && cd playground/verdant-descent && bun run dev",
-    "cipher-room": "wasm-pack build packages/arcadia-rs --target web && cd playground/babylon-estate && bun run dev",
-    "test": "bun run test:rs",
-    "test:rs": "cd packages/arcadia-rs && cargo test",
-    "format": "bun format:rs && bun format:web && bun format:playground && bun format:templates",
-    "format:rs": "cd packages/arcadia-rs && cargo fmt --all",
-    "format:web": "cd web && bun format",
-    "format:playground": "cd playground/astra-naught && bun format && cd ../verdant-descent && bun format && cd ../babylon-estate && bun format",
-    "format:templates": "cd templates/spinfall-arena && bun format && cd ../downleaf && bun format && cd ../cipher-room && bun format",
-    "lint": "bun lint:rs && bun lint:web && bun lint:playground && bun lint:templates",
-    "lint:rs": "cd packages/arcadia-rs && cargo clippy --all -- -D warnings",
-    "lint:web": "cd web && bun lint",
-    "lint:playground": "cd playground/astra-naught && bun lint && cd ../verdant-descent && bun lint && cd ../babylon-estate && bun lint",
-    "lint:templates": "cd templates/spinfall-arena && bun lint && cd ../downleaf && bun lint && cd ../cipher-room && bun lint",
-    "qa": "bun type-check && bun lint && bun format &&  bun run test"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.4.3",
-    "typescript": "^6.0.3"
-  },
-  "dependencies": {
-    "@biomejs/biome": "^2.5.15"
-  }
+	"name": "arcadia",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"workspaces": [
+		"web",
+		"packages/arcadia-ts",
+		"playground/astra-naught",
+		"playground/verdant-descent",
+		"playground/babylon-estate",
+		"templates/spinfall-arena",
+		"templates/downleaf",
+		"templates/cipher-room"
+	],
+	"overrides": {
+		"typescript": "^6.0.3",
+		"solid-js": "^1.9.12",
+		"vite": "^8.0.10",
+		"vite-plugin-solid": "^2.11.12",
+		"@biomejs/biome": "^2.4.13"
+	},
+	"scripts": {
+		"type-check": "cd packages/arcadia-ts && tsc --noEmit && cd ../.. && cd playground/astra-naught && tsc --noEmit && cd ../verdant-descent && tsc --noEmit && cd ../babylon-estate && tsc --noEmit",
+		"spinfall": "wasm-pack build packages/arcadia-rs --target web && cd playground/astra-naught && bun run dev",
+		"downleaf": "wasm-pack build packages/arcadia-rs --target web && cd playground/verdant-descent && bun run dev",
+		"cipher-room": "wasm-pack build packages/arcadia-rs --target web && cd playground/babylon-estate && bun run dev",
+		"test": "bun run test:rs",
+		"test:rs": "cd packages/arcadia-rs && cargo test",
+		"format": "bun format:rs && bun format:web && bun format:playground && bun format:templates",
+		"format:rs": "cd packages/arcadia-rs && cargo fmt --all",
+		"format:web": "cd web && bun format",
+		"format:playground": "cd playground/astra-naught && bun format && cd ../verdant-descent && bun format && cd ../babylon-estate && bun format",
+		"format:templates": "cd templates/spinfall-arena && bun format && cd ../downleaf && bun format && cd ../cipher-room && bun format",
+		"lint": "bun lint:rs && bun lint:web && bun lint:playground && bun lint:templates",
+		"lint:rs": "cd packages/arcadia-rs && cargo clippy --all -- -D warnings",
+		"lint:web": "cd web && bun lint",
+		"lint:playground": "cd playground/astra-naught && bun lint && cd ../verdant-descent && bun lint && cd ../babylon-estate && bun lint",
+		"lint:templates": "cd templates/spinfall-arena && bun lint && cd ../downleaf && bun lint && cd ../cipher-room && bun lint",
+		"qa": "bun type-check && bun lint && bun format &&  bun run test"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.4.3",
+		"typescript": "^6.0.3"
+	},
+	"dependencies": {
+		"@biomejs/biome": "^2.5.15"
+	}
 }
