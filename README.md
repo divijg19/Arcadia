@@ -126,14 +126,12 @@ The Rust runtime handles **deterministic simulation systems**.
 
 Core modules include:
 
-
 ecs/ entity-component system
 physics/ arcade physics and collision
 math/ vectors and transforms
 rng/ deterministic random generator
 procgen/ procedural generation systems
 simulation/ gameplay systems
-
 
 The runtime compiles to **WebAssembly** and exposes a minimal API to TypeScript.
 
@@ -145,13 +143,11 @@ The TypeScript layer manages the browser environment.
 
 Responsibilities include:
 
-
 renderer/ PixiJS rendering layer
 input/ keyboard, mouse, touch
 scene/ scene and state management
 assets/ asset loading
 audio/ sound playback
-
 
 The TypeScript runtime is responsible for rendering the simulation state produced by Rust.
 
