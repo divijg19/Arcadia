@@ -88,8 +88,8 @@ packages/*/pkg/
 **/target/
 
 # Ignore per-crate Cargo.lock files (keep top-level Cargo.lock if you use it)
-Cargo.lock
-**/Cargo.lock
+!Cargo.lock
+!**/Cargo.lock
 
 # If you have a specific engine crate named `arcadia-rs` keep an exception for
 # hand-maintained files in its pkg/ directory while ignoring generated files:
