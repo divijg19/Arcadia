@@ -73,13 +73,13 @@
       "dependencies": {
         "arcadia-ts": "workspace:*",
         "pixi.js": "^8.22.0",
-        "solid-js": "^1.9.17",
+        "solid-js": "^1.9.18",
       },
       "devDependencies": {
-        "@types/node": "^26.6.5",
+        "@types/node": "^26.6.6",
         "typescript": "^6.0.3",
         "vite": "^8.3.5",
-        "vite-plugin-solid": "^2.11.14",
+        "vite-plugin-solid": "^2.11.15",
       },
     },
     "templates/downleaf": {
@@ -87,13 +87,13 @@
       "dependencies": {
         "arcadia-ts": "workspace:*",
         "pixi.js": "^8.22.0",
-        "solid-js": "^1.9.17",
+        "solid-js": "^1.9.18",
       },
       "devDependencies": {
-        "@types/node": "^26.6.5",
+        "@types/node": "^26.6.6",
         "typescript": "^6.0.3",
         "vite": "^8.3.5",
-        "vite-plugin-solid": "^2.11.14",
+        "vite-plugin-solid": "^2.11.15",
       },
     },
     "templates/spinfall-arena": {
@@ -101,13 +101,13 @@
       "dependencies": {
         "arcadia-ts": "workspace:*",
         "pixi.js": "^8.22.0",
-        "solid-js": "^1.9.17",
+        "solid-js": "^1.9.18",
       },
       "devDependencies": {
-        "@types/node": "^26.6.5",
+        "@types/node": "^26.6.6",
         "typescript": "^6.0.3",
         "vite": "^8.3.5",
-        "vite-plugin-solid": "^2.11.14",
+        "vite-plugin-solid": "^2.11.15",
       },
     },
     "web": {
